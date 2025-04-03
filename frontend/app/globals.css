@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:300");
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+/* @import "tailwindcss"; */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
@@ -20,7 +25,15 @@
 }
 
 body {
+  height: 100%;
+  width: 100%;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.characters {
+	width: 18%;
+	height: 18%;
+	position: absolute;
 }

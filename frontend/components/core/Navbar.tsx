@@ -3,11 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaSearch } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import logo from '@/public/logo-gc.png'
+import logo from '@/public/logo_gc.png'
 
 export const Navbar: React.FunctionComponent = () => {
   return (
-    <div className="w-full bg-gray-900 text-white">
+    <div className="w-full h-[10%] bg-black text-white">
       {/* Top Navigation Bar */}
       <div className="flex items-center justify-between px-6 py-3">
         {/* Logo Section */}
