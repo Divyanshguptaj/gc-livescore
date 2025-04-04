@@ -9,12 +9,22 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", 
+  credentials: true, // Allow cookies
+}));
+
 
 // Connect to MongoDB
 connectDB();
 
-// Sample route
+//  routes
+
+const authRoutes = require("./routes/Auth");
+const userRoutes = require("./routes/User");
+app.use("/user", userRoutes);
+app.use("/auth", authRoutes);
+
 app.get("/", (req, res) => {
   res.send("Cricket Live Score API is running...");
 });
