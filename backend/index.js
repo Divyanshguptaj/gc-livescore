@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors({
   origin: "http://localhost:3000", 
-  credentials: true, // Allow cookies
+  credentials: true,
 }));
 
 
@@ -19,11 +19,14 @@ app.use(cors({
 connectDB();
 
 //  routes
-
 const authRoutes = require("./routes/Auth");
 const userRoutes = require("./routes/User");
-app.use("/user", userRoutes);
+const tournamentRoutes = require("./routes/TournamentAndMatch.js");
+const newsAndBlogsRoutes = require("./routes/C.js");
 app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
+app.use("/newsAndBlogs", newsAndBlogsRoutes);
+app.use("/tournament", tournamentRoutes);
 
 app.get("/", (req, res) => {
   res.send("Cricket Live Score API is running...");

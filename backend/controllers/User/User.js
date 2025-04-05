@@ -1,5 +1,5 @@
-const User = require("../models/User");
-const Profile = require("../models/Profile");
+const User = require("../../models/User");
+const Profile = require("../../models/Profile");
 
 // Register a new user
 const registerUser = async (req, res) => {
@@ -14,7 +14,7 @@ const registerUser = async (req, res) => {
 
     // Create a default profile
 
-    const savedProfile = await newProfile.save();
+    const savedProfile = await Profile.save();
 
     // Create new user with the associated profile
     const newUser = new User({

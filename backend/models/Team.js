@@ -11,7 +11,13 @@ const TeamSchema = new mongoose.Schema(
     players: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Players in the team
+        ref: "User",
+      },
+    ],
+    substitutes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
     matchesPlayed: [
@@ -23,5 +29,17 @@ const TeamSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Middleware to enforce a maximum of 11 players
+TeamSchema.pre("save", function (next) {
+  if (this.players.length > 11) {
+    return next(new Error("A team cannot have more than 11 players."));
+  }
+  if (this.substitutes.length > 4) {
+    return next(new Error("A team cannot have more than 4 substitutes."));
+  }
+  next();
+});
+
 
 module.exports = mongoose.model("Team", TeamSchema);

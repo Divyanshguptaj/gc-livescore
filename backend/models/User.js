@@ -38,8 +38,8 @@ const UserSchema = new mongoose.Schema(
     matchesPlayed: [
       {
         matchId: { type: mongoose.Schema.Types.ObjectId, ref: "Match" },
-        runsScored: { type: Number, default: 0 },
-        wicketsTaken: { type: Number, default: 0 },
+        // runsScored: { type: Number, default: 0 },
+        // wicketsTaken: { type: Number, default: 0 },
       },
     ],
     totalRunsScored: {
@@ -50,10 +50,10 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
+    playingType: { 
+      type: String, 
+      enum: ["Batsman", "Bowler", "All-Rounder", "WicketKeeper", "WicketKeeperBatsman"], 
+      required: true 
     },
   },
   { timestamps: true }
