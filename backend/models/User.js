@@ -53,7 +53,6 @@ const UserSchema = new mongoose.Schema(
     playingType: { 
       type: String, 
       enum: ["Batsman", "Bowler", "All-Rounder", "WicketKeeper", "WicketKeeperBatsman"], 
-      required: true 
     },
   },
   { timestamps: true }

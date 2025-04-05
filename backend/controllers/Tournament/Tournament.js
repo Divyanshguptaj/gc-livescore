@@ -3,14 +3,14 @@ import Tournament from "../../models/Tournament.js";
 // 🎯 Create a New Tournament
 export const createTournament = async (req, res) => {
     try {
-        const { name, location, startDate, endDate, teams } = req.body;
+        const { name, location, startDate, endDate, teams, format, type } = req.body;
 
         // Validate required fields
-        if (!name || !location || !startDate || !endDate) {
+        if (!name || !location || !startDate || !endDate || !format || !type) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        const newTournament = new Tournament({ name, location, startDate, endDate, teams });
+        const newTournament = new Tournament({ name, location, startDate, endDate, teams, format, type });
 
         await newTournament.save();
         res.status(201).json({ success: true, message: "Tournament created successfully", tournament: newTournament });

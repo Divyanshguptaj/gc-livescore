@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+// add organiser and description -
 const TournamentSchema = new mongoose.Schema(
   {
     name: {

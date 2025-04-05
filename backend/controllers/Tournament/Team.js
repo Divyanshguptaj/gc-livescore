@@ -4,13 +4,13 @@ import User from "../../models/User.js";
 // 🔹 Create a new team
 export const createTeam = async (req, res) => {
     try {
-        const { name, players, tournamentId } = req.body;
+        const { name, players, substitutes, tournamentId } = req.body;
 
-        if (!name || !tournamentId || !players || players.length === 0) {
+        if (!name || !tournamentId || !players || !substitutes) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        const newTeam = new Team({ name, players, tournament: tournamentId });
+        const newTeam = new Team({ name, players, tournament: tournamentId, substitutes });
         await newTeam.save();
 
         res.status(201).json({ success: true, message: "Team created successfully", team: newTeam });
@@ -49,7 +49,7 @@ export const getTeamById = async (req, res) => {
 export const updateTeam = async (req, res) => {
     try {
         const { teamId } = req.params;
-        const { name, players } = req.body;
+        const { name, players, substitutes, matchesPlayed } = req.body;
 
         let team = await Team.findById(teamId);
         if (!team) {
@@ -58,6 +58,8 @@ export const updateTeam = async (req, res) => {
 
         if (name) team.name = name;
         if (players) team.players = players;
+        if (substitutes) team.substitutes = substitutes;
+        if (matchesPlayed) team.matchesPlayed = matchesPlayed;
 
         await team.save();
         res.status(200).json({ success: true, message: "Team updated successfully", team });
@@ -66,38 +68,41 @@ export const updateTeam = async (req, res) => {
     }
 };
 
+
 // 🔹 Add a player to a team
 export const addPlayerToTeam = async (req, res) => {
     try {
         const { teamId } = req.params;
-        const { playerId } = req.body;
+        const { playerId, role = "player" } = req.body; // role can be 'player' or 'substitute'
 
-        if (!playerId) {
-            return res.status(400).json({ success: false, message: "Player ID is required" });
+        if (!playerId || !teamId) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        // Find the team
-        let team = await Team.findById(teamId);
+        const team = await Team.findById(teamId);
         if (!team) {
             return res.status(404).json({ success: false, message: "Team not found" });
         }
 
-        // Check if player exists
         const player = await User.findById(playerId);
         if (!player) {
-            return res.status(404).json({ success: false, message: "Player not found" });
+            return res.status(404).json({ success: false, message: "User not found, first add register the player." });
         }
 
-        // Check if player is already in the team
-        if (team.players.includes(playerId)) {
-            return res.status(400).json({ success: false, message: "Player is already in this team" });
+        // Check for duplicates
+        if (team.players.includes(playerId) || team.substitutes.includes(playerId)) {
+            return res.status(400).json({ success: false, message: "Player is already in another team" });
         }
 
-        // Add player to the team
-        team.players.push(playerId);
+        if (role === "substitute") {
+            team.substitutes.push(playerId);
+        } else {
+            team.players.push(playerId);
+        }
+
         await team.save();
+        res.status(200).json({ success: true, message: `Player added to ${role} list successfully`, team });
 
-        res.status(200).json({ success: true, message: "Player added to team successfully", team });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }

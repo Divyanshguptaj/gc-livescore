@@ -40,7 +40,6 @@ router.get("/:tournamentId", getLeaderboard);
 router.put("/:playerId", updateLeaderboard);
 router.delete("/:tournamentId", resetLeaderboard);
 
-
 // 🔹 Create a new team
 router.post("/createTeam", createTeam);
 router.get("/getTeams", getTeams);
