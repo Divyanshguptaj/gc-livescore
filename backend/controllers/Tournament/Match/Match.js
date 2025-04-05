@@ -1,8 +1,8 @@
-const Match = require("../../models/Match");
-const Tournament = require("../../models/Tournament");
-const Innings = require("../models/Innings");
+import Match from "../../../models/Match.js"
+import Tournament from "../../../models/Tournament.js"
+import Innings from "../../../models/Inning.js"
 
-const createMatch = async (req, res) => {
+export const createMatch = async (req, res) => {
     try {
         const { tournamentId, teams, date, venue, status, matchType, scorecard } = req.body;
 
@@ -55,7 +55,7 @@ const createMatch = async (req, res) => {
 };
 
 // 📋 Get All Matches
-const getMatches = async (req, res) => {
+export const getMatches = async (req, res) => {
     try {
         const matches = await Match.find().populate("tournament teams scorecard");
         res.status(200).json({ success: true, matches });
@@ -65,7 +65,7 @@ const getMatches = async (req, res) => {
 };
 
 // 🔍 Get a Specific Match by ID
-const getMatchById = async (req, res) => {
+export const getMatchById = async (req, res) => {
     try {
         const match = await Match.findById(req.params.id).populate("tournament teams scorecard");
 
@@ -81,7 +81,7 @@ const getMatchById = async (req, res) => {
 };
 
 // ✏️ Update Match Details
-const updateMatch = async (req, res) => {
+export const updateMatch = async (req, res) => {
     try {
         const { teams, date, venue, status, scorecard } = req.body;
 
@@ -103,7 +103,7 @@ const updateMatch = async (req, res) => {
 };
 
 // ❌ Delete a Match
-const deleteMatch = async (req, res) => {
+export const deleteMatch = async (req, res) => {
     try {
         const deletedMatch = await Match.findByIdAndDelete(req.params.id);
 
@@ -116,12 +116,4 @@ const deleteMatch = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
-};
-
-module.exports = {
-    createMatch,
-    getMatches,
-    getMatchById,
-    updateMatch,
-    deleteMatch
 };

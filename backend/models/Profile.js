@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-import avatar from '../../frontend/public/assets/avatar.png'
+import mongoose from "mongoose";
+// import avatar from '../assets/avatar.png'
 
 const ProfileSchema = new mongoose.Schema(
   {
@@ -15,7 +15,7 @@ const ProfileSchema = new mongoose.Schema(
     },
     profileImage: { 
         type: String, 
-        default: {avatar} 
+        default: "../assets/avatar.png", 
     },
 
     bio: { 
@@ -37,4 +37,4 @@ const ProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Profile", ProfileSchema);
+export default mongoose.model("Profile", ProfileSchema);

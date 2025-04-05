@@ -1,12 +1,12 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
+import{
   createNewsOrBlog,
   getAllNewsAndBlogs,
   getNewsOrBlogById,
   updateNewsOrBlog,
   deleteNewsOrBlog,
-} = require("../controllers/NewsAndBlogs");
+} from "../controllers/NewsAndBlogs.js";
 
 router.post("/createNewsAndBlog", createNewsOrBlog);
 router.get("/getAllNewsAndBlogs", getAllNewsAndBlogs);
@@ -14,4 +14,4 @@ router.get("/:id", getNewsOrBlogById);
 router.put("/:id", updateNewsOrBlog);
 router.delete("/:id", deleteNewsOrBlog);
 
-module.exports = router;
+export default router;

@@ -1,9 +1,9 @@
-const Leaderboard = require("../models/Leaderboard");
-const Tournament = require("../models/Tournament");
-const Player = require("../models/User");  // Since players and users are the same
+import Leaderboard from"../../models/Leaderboard.js";
+import Tournament from"../../models/Tournament.js";
+import Player from"../../models/User.js";  // Since players and users are the same
 
 // 🔹 Get leaderboard for a specific tournament
-const getLeaderboard = async (req, res) => {
+export const getLeaderboard = async (req, res) => {
     try {
         const { tournamentId } = req.params;
 
@@ -23,7 +23,7 @@ const getLeaderboard = async (req, res) => {
 };
 
 // 🔹 Update leaderboard (update stats for a player)
-const updateLeaderboard = async (req, res) => {
+export const updateLeaderboard = async (req, res) => {
     try {
         const { playerId } = req.params;
         const { tournamentId, runsScored, wicketsTaken, matchesPlayed } = req.body;
@@ -49,7 +49,7 @@ const updateLeaderboard = async (req, res) => {
 };
 
 // 🔹 Reset leaderboard for a tournament (optional)
-const resetLeaderboard = async (req, res) => {
+export const resetLeaderboard = async (req, res) => {
     try {
         const { tournamentId } = req.params;
 
@@ -60,5 +60,3 @@ const resetLeaderboard = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
-
-module.exports = { getLeaderboard, updateLeaderboard, resetLeaderboard };

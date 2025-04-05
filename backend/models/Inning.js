@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const ScorecardSchema = new mongoose.Schema(
   {
@@ -71,4 +71,4 @@ const ScorecardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Scorecard", ScorecardSchema);
+export default mongoose.model("Scorecard", ScorecardSchema);

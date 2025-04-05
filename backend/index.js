@@ -19,10 +19,15 @@ app.use(cors({
 connectDB();
 
 //  routes
-const authRoutes = require("./routes/Auth");
-const userRoutes = require("./routes/User");
-const tournamentRoutes = require("./routes/TournamentAndMatch.js");
-const newsAndBlogsRoutes = require("./routes/C.js");
+import authRoutes from './routes/Auth.js'
+import userRoutes from './routes/User.js'
+import tournamentRoutes from './routes/TournamentAndMatch.js'
+import newsAndBlogsRoutes from './routes/NewsAndBlogs.js'
+
+// const authRoutes = require("./routes/Auth");
+// const userRoutes = require("./routes/User");
+// const tournamentRoutes = require("./routes/Tour`namentAndMatch.js");
+// const newsAndBlogsRoutes = require("./routes/NewsAndBlogs.js");
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/newsAndBlogs", newsAndBlogsRoutes);

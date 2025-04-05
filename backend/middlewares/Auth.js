@@ -1,7 +1,8 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
+dotenv.config();
 
-exports.auth = async (req, res, next) => {
+export const auth = async (req, res, next) => {
   try {
     const token = req.cookies.token || req.body.token || req.header("Authorization").replace("Bearer", "");
     if (!token) {
@@ -29,7 +30,7 @@ exports.auth = async (req, res, next) => {
 };
 
 //isStudent
-exports.isUser = async (req, res, next) => {
+export const isUser = async (req, res, next) => {
   try {
     // console.log("here");
     if (req.user.role !== "user") {
@@ -48,7 +49,7 @@ exports.isUser = async (req, res, next) => {
 };
 
 //isAdmin
-exports.isAdmin = async (req, res, next) => {
+export const isAdmin = async (req, res, next) => {
   try {
     if (req.user.accountType !== "admin") {
       return res.status(400).json({

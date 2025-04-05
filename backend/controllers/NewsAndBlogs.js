@@ -1,7 +1,7 @@
-const NewsAndBlog = require("../models/NewsAndBlog");
+import NewsAndBlog from "../models/NewsAndBlogs.js";
 
 // ✅ Create a news/blog
-const createNewsOrBlog = async (req, res) => {
+export const createNewsOrBlog = async (req, res) => {
   try {
     const { title, content, author, category, tournament } = req.body;
 
@@ -19,7 +19,7 @@ const createNewsOrBlog = async (req, res) => {
 };
 
 // ✅ Get all news/blogs
-const getAllNewsAndBlogs = async (req, res) => {
+export const getAllNewsAndBlogs = async (req, res) => {
   try {
     const posts = await NewsAndBlog.find().populate("author", "name").populate("tournament", "name");
     res.status(200).json({ success: true, data: posts });
@@ -29,7 +29,7 @@ const getAllNewsAndBlogs = async (req, res) => {
 };
 
 // ✅ Get a single news/blog by ID
-const getNewsOrBlogById = async (req, res) => {
+export const getNewsOrBlogById = async (req, res) => {
   try {
     const post = await NewsAndBlog.findById(req.params.id).populate("author", "name").populate("tournament", "name");
     if (!post) {
@@ -42,7 +42,7 @@ const getNewsOrBlogById = async (req, res) => {
 };
 
 // ✅ Update a news/blog by ID
-const updateNewsOrBlog = async (req, res) => {
+export const updateNewsOrBlog = async (req, res) => {
   try {
     const updatedPost = await NewsAndBlog.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!updatedPost) {
@@ -55,7 +55,7 @@ const updateNewsOrBlog = async (req, res) => {
 };
 
 // ✅ Delete a news/blog by ID
-const deleteNewsOrBlog = async (req, res) => {
+export const deleteNewsOrBlog = async (req, res) => {
   try {
     const deletedPost = await NewsAndBlog.findByIdAndDelete(req.params.id);
     if (!deletedPost) {
@@ -65,12 +65,4 @@ const deleteNewsOrBlog = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error.", error: error.message });
   }
-};
-
-module.exports = {
-  createNewsOrBlog,
-  getAllNewsAndBlogs,
-  getNewsOrBlogById,
-  updateNewsOrBlog,
-  deleteNewsOrBlog,
 };

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const NewsAndBlogsSchema = new mongoose.Schema(
   {
@@ -45,4 +45,4 @@ const NewsAndBlogsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("NewsAndBlogs", NewsAndBlogsSchema);
+export default mongoose.model("NewsAndBlogs", NewsAndBlogsSchema);

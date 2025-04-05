@@ -1,12 +1,12 @@
-const User = require('../../models/User');
-const mailSender = require('../../utils/mailSender');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto'); 
+import User from '../../models/User.js';
+import mailSender from '../../utils/mailSender.js'
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 // Reset Password Token
-exports.resetPasswordToken = async (req, res) => {
+export const resetPasswordToken = async (req, res) => {
     try {
-        const { email } = req.query;
+        const { email } = req.body;
         if (!email) {
             return res.status(400).json({
                 success: false,
@@ -18,7 +18,7 @@ exports.resetPasswordToken = async (req, res) => {
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "User not found...",
+                message: "Email not found...",
             });
         }
 
@@ -43,6 +43,7 @@ exports.resetPasswordToken = async (req, res) => {
             message: "Email sent successfully",
         });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({
             success: false,
             message: "Can't send mail",
@@ -51,7 +52,7 @@ exports.resetPasswordToken = async (req, res) => {
 };
 
 // Reset Password
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
     try {
         const { password, confirmPassword, token } = req.body;
 

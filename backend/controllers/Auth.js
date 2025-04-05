@@ -1,13 +1,14 @@
-const User = require('../models/User');
-const OTP = require('../models/OTP');
-const otpgenerator = require("otp-generator");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const Profile = require('../models/Profile');
-require('dotenv').config();
+import User from '../models/User.js';
+import OTP from '../models/OTP.js';
+import otpGenerator from 'otp-generator';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import Profile from '../models/Profile.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 //Send OTP -
-exports.sendOTP = async (req, res)=>{
+export const sendOTP = async (req, res)=>{
     try{
         const {email} = req.body;
         const checkUserPresent = await User.findOne({email})
@@ -49,7 +50,7 @@ exports.sendOTP = async (req, res)=>{
 }
 
 //sign Up -
-exports.signUp = async (req,res) =>{
+export const signUp = async (req,res) =>{
     try{
         const {name , email, password, confirmPassword, otp, contactNumber} = req.body; 
 
@@ -123,7 +124,7 @@ exports.signUp = async (req,res) =>{
 }
 
 //login
-exports.login = async (req,res)=>{
+export const login = async (req,res)=>{
     try{
         const {email, password} = req.body;
         if(!email || !password){
@@ -175,3 +176,55 @@ exports.login = async (req,res)=>{
         })
     }
 }
+
+export const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, mail } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Password fields cannot be empty",
+            });
+        }
+        console.log(mail)
+        // Find user by email
+        const user = await User.findOne({ email: mail });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false, 
+                message: "User not found",
+            });
+        }
+
+        // Compare old password with stored password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                message: "Old password is incorrect",
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        user.password = hashedPassword;
+        await user.save(); // ✅ Save changes
+
+        return res.status(200).json({
+            success: true,
+            message: "Password Updated Successfully",
+        });
+
+    } catch (error) {
+        console.error("Change Password Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};

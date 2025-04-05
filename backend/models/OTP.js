@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const mailSender = require("../utils/mailSender");
+import mongoose from "mongoose";
+import mailSender from "../utils/mailSender.js";
 
 const OTPSchema = new mongoose.Schema({
     email: {
@@ -41,4 +41,4 @@ OTPSchema.pre("save",async function(next){
     next();
 })
 
-module.exports = mongoose.model("OTP",OTPSchema);
+export default mongoose.model("OTP",OTPSchema);

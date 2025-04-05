@@ -1,8 +1,8 @@
-const Innings = require("../models/Innings");
-const Match = require("../models/Match");
+import Innings from "../../../models/Inning.js";
+import Match from "../../../models/Match.js";
 
 // 🔹 Get all innings for a given match
-const getInningsByMatch = async (req, res) => {
+export const getInningsByMatch = async (req, res) => {
     try {
         const { matchId } = req.params;
         const innings = await Innings.find({ match: matchId });
@@ -18,7 +18,7 @@ const getInningsByMatch = async (req, res) => {
 };
 
 // 🔹 Update innings (runs, wickets, overs, etc.)
-const updateInnings = async (req, res) => {
+export const updateInnings = async (req, res) => {
     try {
         const { inningsId } = req.params;
         const { runs, wickets, overs } = req.body;
@@ -41,7 +41,7 @@ const updateInnings = async (req, res) => {
 };
 
 // 🔹 Delete an innings (useful for debugging, but rarely needed)
-const deleteInnings = async (req, res) => {
+export const deleteInnings = async (req, res) => {
     try {
         const { inningsId } = req.params;
 
@@ -56,4 +56,4 @@ const deleteInnings = async (req, res) => {
     }
 };
 
-module.exports = { getInningsByMatch, updateInnings, deleteInnings };
+export default { getInningsByMatch, updateInnings, deleteInnings };

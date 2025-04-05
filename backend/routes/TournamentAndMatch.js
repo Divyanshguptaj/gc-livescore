@@ -1,10 +1,10 @@
-const express = require("express");
-const { createTournament, getTournaments, getTournamentById, updateTournament, deleteTournament } = require("../controllers/Tournament/Tournament");
-const { createMatch, getMatches, getMatchById, updateMatch, deleteMatch } = require("../controllers/Tournament/Match/Match");
-const { addBall, getBallsByMatch, getBallById, updateBall, deleteBall } = require("../controllers/Tournament/Match/Ball");
-const { updateInnings, getInningsByMatch, deleteInnings } = require("../controllers/Tournament/Match/Inning");
-const { getLeaderboard, updateLeaderboard, resetLeaderboard } = require("../controllers/Tournament/Leaderboard");
-const { createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addPlayerToTeam  } = require("../controllers/Tournament/Team");
+import express from "express";
+import { createTournament, getTournaments, getTournamentById, updateTournament, deleteTournament } from "../controllers/Tournament/Tournament.js";
+import { createMatch, getMatches, getMatchById, updateMatch, deleteMatch } from "../controllers/Tournament/Match/Match.js";
+import { addBall, getBallsByMatch, getBallById, updateBall, deleteBall } from "../controllers/Tournament/Match/Ball.js";
+import { updateInnings, getInningsByMatch, deleteInnings } from "../controllers/Tournament/Match/Inning.js";
+import { getLeaderboard, updateLeaderboard, resetLeaderboard } from "../controllers/Tournament/Leaderboard.js";
+import { createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addPlayerToTeam } from "../controllers/Tournament/Team.js";
 
 const router = express.Router();
 
@@ -49,4 +49,4 @@ router.put("/:teamId", updateTeam);
 router.patch("/:teamId/addPlayer", addPlayerToTeam);
 router.delete("/:teamId", deleteTeam);
 
-module.exports = router;
+export default router;

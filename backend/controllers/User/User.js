@@ -1,8 +1,8 @@
-const User = require("../../models/User");
-const Profile = require("../../models/Profile");
+import User from "../../models/User.js";
+import Profile from "../../models/Profile.js";
 
 // Register a new user
-const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -40,5 +40,3 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-module.exports = { registerUser };

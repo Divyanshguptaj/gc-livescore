@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const LeaderboardSchema = new mongoose.Schema(
   {
@@ -64,4 +64,4 @@ const LeaderboardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Leaderboard", LeaderboardSchema);
+export default mongoose.model("Leaderboard", LeaderboardSchema);

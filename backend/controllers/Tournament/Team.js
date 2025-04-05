@@ -1,8 +1,8 @@
-const Team = require("../models/Team");
-const User = require("../models/User");
+import Team from "../../models/Team.js";
+import User from "../../models/User.js";
 
 // 🔹 Create a new team
-const createTeam = async (req, res) => {
+export const createTeam = async (req, res) => {
     try {
         const { name, players, tournamentId } = req.body;
 
@@ -20,7 +20,7 @@ const createTeam = async (req, res) => {
 };
 
 // 🔹 Get all teams
-const getTeams = async (req, res) => {
+export const getTeams = async (req, res) => {
     try {
         const teams = await Team.find().populate("players", "name email").populate("tournament", "name");
         res.status(200).json({ success: true, teams });
@@ -30,7 +30,7 @@ const getTeams = async (req, res) => {
 };
 
 // 🔹 Get a specific team by ID
-const getTeamById = async (req, res) => {
+export const getTeamById = async (req, res) => {
     try {
         const { teamId } = req.params;
         const team = await Team.findById(teamId).populate("players", "name email").populate("tournament", "name");
@@ -46,7 +46,7 @@ const getTeamById = async (req, res) => {
 };
 
 // 🔹 Update team (name, add/remove players)
-const updateTeam = async (req, res) => {
+export const updateTeam = async (req, res) => {
     try {
         const { teamId } = req.params;
         const { name, players } = req.body;
@@ -67,7 +67,7 @@ const updateTeam = async (req, res) => {
 };
 
 // 🔹 Add a player to a team
-const addPlayerToTeam = async (req, res) => {
+export const addPlayerToTeam = async (req, res) => {
     try {
         const { teamId } = req.params;
         const { playerId } = req.body;
@@ -104,7 +104,7 @@ const addPlayerToTeam = async (req, res) => {
 };
 
 // 🔹 Delete a team
-const deleteTeam = async (req, res) => {
+export const deleteTeam = async (req, res) => {
     try {
         const { teamId } = req.params;
         const team = await Team.findById(teamId);
@@ -119,5 +119,3 @@ const deleteTeam = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
-
-module.exports = { createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addPlayerToTeam };

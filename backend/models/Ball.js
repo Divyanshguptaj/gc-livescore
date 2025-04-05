@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const BallSchema = new mongoose.Schema(
   {
@@ -67,4 +67,5 @@ const BallSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Ball", BallSchema);
+const Ball = mongoose.model("Ball", BallSchema);
+export default Ball;
