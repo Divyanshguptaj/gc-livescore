@@ -4,13 +4,17 @@ import User from "../../models/User.js";
 // 🔹 Create a new team
 export const createTeam = async (req, res) => {
     try {
-        const { name, players, substitutes, tournamentId } = req.body;
-
-        if (!name || !tournamentId || !players || !substitutes) {
+        const { name } = req.body;
+        if (!name) {
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        const newTeam = new Team({ name, players, tournament: tournamentId, substitutes });
+        const existingTeam = await Team.findOne({ name });
+        if (existingTeam) {
+          return res.status(400).json({ success: false, message: "Team already exists" });
+        }
+
+        const newTeam = new Team({ name });
         await newTeam.save();
 
         res.status(201).json({ success: true, message: "Team created successfully", team: newTeam });
@@ -21,13 +25,16 @@ export const createTeam = async (req, res) => {
 
 // 🔹 Get all teams
 export const getTeams = async (req, res) => {
-    try {
-        const teams = await Team.find().populate("players", "name email").populate("tournament", "name");
-        res.status(200).json({ success: true, teams });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error", error: error.message });
-    }
+  try {
+    const teams = await Team.find({})
+      .populate("players", "name email")
+
+    res.status(200).json({ success: true, teams });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
 };
+  
 
 // 🔹 Get a specific team by ID
 export const getTeamById = async (req, res) => {
@@ -68,43 +75,85 @@ export const updateTeam = async (req, res) => {
     }
 };
 
-
 // 🔹 Add a player to a team
-export const addPlayerToTeam = async (req, res) => {
+export const addPlayersToTeam = async (req, res) => {
     try {
-        const { teamId } = req.params;
-        const { playerId, role = "player" } = req.body; // role can be 'player' or 'substitute'
+        const { teamId, players = [], substitutes = [] } = req.body;
 
-        if (!playerId || !teamId) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+        if (!teamId || (!players.length && !substitutes.length)) {
+            return res.status(400).json({
+                success: false,
+                message: "Team ID and at least one player or substitute is required.",
+            });
         }
 
         const team = await Team.findById(teamId);
         if (!team) {
-            return res.status(404).json({ success: false, message: "Team not found" });
+            return res.status(404).json({ success: false, message: "Team not found." });
         }
 
-        const player = await User.findById(playerId);
-        if (!player) {
-            return res.status(404).json({ success: false, message: "User not found, first add register the player." });
+        // Remove duplicates from input
+        const uniquePlayers = [...new Set(players)];
+        const uniqueSubs = [...new Set(substitutes)];
+
+        // Check overlap (players can't be both player & sub)
+        const overlap = uniquePlayers.filter(id => uniqueSubs.includes(id));
+        if (overlap.length) {
+            return res.status(400).json({
+                success: false,
+                message: `Users ${overlap.join(', ')} are in both players and substitutes.`,
+            });
         }
 
-        // Check for duplicates
-        if (team.players.includes(playerId) || team.substitutes.includes(playerId)) {
-            return res.status(400).json({ success: false, message: "Player is already in another team" });
+        // Validate users exist
+        const allIds = [...uniquePlayers, ...uniqueSubs];
+        const existingUsers = await User.find({ _id: { $in: allIds } });
+        const existingIds = existingUsers.map(user => user._id.toString());
+
+        const invalidIds = allIds.filter(id => !existingIds.includes(id));
+        if (invalidIds.length) {
+            return res.status(400).json({
+                success: false,
+                message: `These user IDs do not exist: ${invalidIds.join(', ')}`,
+            });
         }
 
-        if (role === "substitute") {
-            team.substitutes.push(playerId);
-        } else {
-            team.players.push(playerId);
-        }
+        // Filter out users already in this team
+        const newPlayers = uniquePlayers.filter(id =>
+            !team.players.includes(id) && !team.substitutes.includes(id)
+        );
+        const newSubs = uniqueSubs.filter(id =>
+            !team.players.includes(id) && !team.substitutes.includes(id)
+        );
 
+        // Add to team
+        team.players.push(...newPlayers);
+        team.substitutes.push(...newSubs);
         await team.save();
-        res.status(200).json({ success: true, message: `Player added to ${role} list successfully`, team });
+
+        res.status(200).json({
+            success: true,
+            message: "Team updated with new players and substitutes.",
+            added: {
+                players: newPlayers,
+                substitutes: newSubs
+            },
+            skipped: {
+                alreadyInTeam: allIds.filter(id =>
+                    team.players.includes(id) || team.substitutes.includes(id)
+                ),
+                invalidIds,
+                duplicatesInRequest: overlap
+            },
+            team
+        });
 
     } catch (error) {
-        res.status(500).json({ success: false, message: "Server error", error: error.message });
+        res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message,
+        });
     }
 };
 

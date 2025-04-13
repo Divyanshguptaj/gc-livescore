@@ -4,7 +4,10 @@ dotenv.config();
 
 export const auth = async (req, res, next) => {
   try {
-    const token = req.cookies.token || req.body.token || req.header("Authorization").replace("Bearer", "");
+    console.log("auth");
+    const authHeader = req.header("Authorization");
+    const token = (authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null);
+
     if (!token) {
       return res.status(400).json({
         success: false,
@@ -51,7 +54,8 @@ export const isUser = async (req, res, next) => {
 //isAdmin
 export const isAdmin = async (req, res, next) => {
   try {
-    if (req.user.accountType !== "admin") {
+    console.log("isAdmin");
+    if (req.user.role !== "admin") {
       return res.status(400).json({
         success: false,
         message: "This is a protected route for Admins only",

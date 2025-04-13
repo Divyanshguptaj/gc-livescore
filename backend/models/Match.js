@@ -18,6 +18,16 @@ const MatchSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    innings: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Inning",
+      },
+    ],
+    time: {
+      type: String,
+      required: true,
+    },
     venue: {
       type: String,
       required: true,

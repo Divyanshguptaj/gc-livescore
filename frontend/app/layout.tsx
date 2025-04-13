@@ -1,13 +1,22 @@
+'use client';
+
 import { Navbar } from "@/components/core/Navbar";
 import "./globals.css";
+import { Provider } from 'react-redux';
+import {store} from '../redux/store'; // ✅ Corrected path to your actual store file
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-export default function RootLayout({children}: Readonly<{children: React.ReactNode;}>) {
+import { Toaster } from "react-hot-toast";
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html  className="h-[100%] w-[100%]">
-      <body className="h-[100%] w-[100%]">
-        <Navbar />
-        <LoadingSpinner/>
-        {children}
+    <html className="h-full w-full">
+      <body className="h-full w-full">
+        <Toaster position="top-center"/>
+        <Provider store={store}>
+          <Navbar />
+          {children}
+        </Provider>
+        {/* You can optionally include LoadingSpinner globally if needed */}
       </body>
     </html>
   );

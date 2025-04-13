@@ -1,51 +1,55 @@
 import express from "express";
-import { createTournament, getTournaments, getTournamentById, updateTournament, deleteTournament } from "../controllers/Tournament/Tournament.js";
+import multer from 'multer';
+import { createTournament, getTournaments, getTournamentById, updateTournament, deleteTournament, addTeam } from "../controllers/Tournament/Tournament.js";
 import { createMatch, getMatches, getMatchById, updateMatch, deleteMatch } from "../controllers/Tournament/Match/Match.js";
 import { addBall, getBallsByMatch, getBallById, updateBall, deleteBall } from "../controllers/Tournament/Match/Ball.js";
 import { updateInnings, getInningsByMatch, deleteInnings } from "../controllers/Tournament/Match/Inning.js";
 import { getLeaderboard, updateLeaderboard, resetLeaderboard } from "../controllers/Tournament/Leaderboard.js";
-import { createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addPlayerToTeam } from "../controllers/Tournament/Team.js";
+import { createTeam, getTeams, getTeamById, updateTeam, deleteTeam, addPlayersToTeam } from "../controllers/Tournament/Team.js";
+import { auth, isAdmin } from "../middlewares/Auth.js";
 
+const upload = multer();
 const router = express.Router();
 
 // 🏆 Tournament Routes
-router.post("/create", createTournament);
-router.get("/", getTournaments);
-router.get("/:id", getTournamentById);
+router.post("/create",auth, isAdmin, createTournament);
+router.post("/addTeam",upload.none(), addTeam);
+router.get("/getTournaments", getTournaments);
+router.get("getTournamentById/:id", getTournamentById);
 router.put("/:id", updateTournament);
 router.delete("/:id", deleteTournament);
 
 // 🏏 Match Routes
-router.post("/create", createMatch);
-router.get("/", getMatches);
-router.get("/:id", getMatchById);
+router.post("/createMatch", createMatch);
+router.get("/getMatches", getMatches);
+router.get("getMatchById/:id", getMatchById);
 router.put("/:id", updateMatch);
 router.delete("/:id", deleteMatch);
 
 // Ball Routes -
 router.post("/add", addBall);
 router.get("/match/:matchId", getBallsByMatch);
-router.get("/:id", getBallById);
+router.get("getBallById/:id", getBallById);
 router.put("/update/:id", updateBall);
 router.delete("/delete/:id", deleteBall);
 
 // Inning routes -
-router.get("/:matchId", getInningsByMatch);
+router.get("getInningsByMatch/:matchId", getInningsByMatch);
 router.put("/:inningsId", updateInnings);
 router.delete("/:inningsId", deleteInnings);
 
 
 // 🔹 Leaderboard routes - 
-router.get("/:tournamentId", getLeaderboard);
+router.get("getLeaderboard/:tournamentId", getLeaderboard);
 router.put("/:playerId", updateLeaderboard);
 router.delete("/:tournamentId", resetLeaderboard);
 
 // 🔹 Create a new team
 router.post("/createTeam", createTeam);
 router.get("/getTeams", getTeams);
-router.get("/:teamId", getTeamById);
+router.get("getTeamById/:teamId", getTeamById);
 router.put("/:teamId", updateTeam);
-router.patch("/:teamId/addPlayer", addPlayerToTeam);
+router.post("/addPlayers", addPlayersToTeam);
 router.delete("/:teamId", deleteTeam);
 
 export default router;

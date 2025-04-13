@@ -7,20 +7,15 @@ const ScorecardSchema = new mongoose.Schema(
       ref: "Match",
       required: true,
     },
-    innings: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Innings",
-      required: true,
-    },
     battingTeam: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
+      // required: true,
     },
     bowlingTeam: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
+      // required: true,
     },
     totalRuns: {
       type: Number,
@@ -71,4 +66,4 @@ const ScorecardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Scorecard", ScorecardSchema);
+export default mongoose.model("Inning", ScorecardSchema);

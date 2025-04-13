@@ -40,3 +40,14 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// Fetch all users
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).populate("profile", "bio profilePicture");
+
+    res.status(200).json({ message: "Users fetched successfully!", users });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

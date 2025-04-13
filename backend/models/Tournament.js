@@ -8,6 +8,16 @@ const TournamentSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    location: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      // required: true,
+      trim: true,
+    },
     format: {
       type: String,
       enum: ["T20", "ODI", "Test"],

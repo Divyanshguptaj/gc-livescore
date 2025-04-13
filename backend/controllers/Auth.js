@@ -18,7 +18,7 @@ export const sendOTP = async (req, res)=>{
                 message: "User already exists! , Please go and try for login ...", 
             })
         }
-        var otp = otpgenerator.generate(6,{
+        var otp = otpGenerator.generate(6,{
             upperCaseAlphabets: false,
             lowerCaseAlphabets: false,
             specialChars: false,    
@@ -29,7 +29,7 @@ export const sendOTP = async (req, res)=>{
                 upperCaseAlphabets: false,
                 lowerCaseAlphabets: false,
                 specialChars: false,    
-            })
+            }) 
             result = await OTP.findOne({otp: otp})
         }
 
@@ -52,20 +52,13 @@ export const sendOTP = async (req, res)=>{
 //sign Up -
 export const signUp = async (req,res) =>{
     try{
-        const {name , email, password, confirmPassword, otp, contactNumber} = req.body; 
-
+        const {name , email, password, otp} = req.body; 
+        console.log(req.body);
         //validation
-        if(!name || !email || !password || !confirmPassword || !otp){
+        if(!name || !email || !password || !otp){
             return res.status(403).json({ 
                 success: false,
                 message: "All fields are mandatory...",
-            })
-        }
-
-        if(password !== confirmPassword){
-            return res.status(400).json({
-                success: false,
-                message: "Passwords are not same",
             })
         }
 
@@ -96,15 +89,10 @@ export const signUp = async (req,res) =>{
         const profileDetails = new Profile({
             user: null,
             gender: null,
-          //   profileImage: "/assets/avatar.png", // Default avatar path
-            bio: "",
-            contactNumber: "",
           });
 
-        if(contactNumber) profileDetails.contactNumber = contactNumber;
-
-        //create entry of user 
-        const user = await User.create({
+        //create entry of user-
+        const user = await User.create({ 
             name, email, password, profile: profileDetails._id,
         })
 
@@ -149,7 +137,7 @@ export const login = async (req,res)=>{
                 role: user.role,
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET,{
-                expiresIn: "24h",
+                expiresIn: "1d",
             });
             user.token = token;
             user.password = undefined; 
@@ -158,9 +146,10 @@ export const login = async (req,res)=>{
                 expires: new Date(Date.now() + 3*24*60*60*1000),
                 httpOnly: true,
             }
-            return res.cookie("Token", token, options).status(200).json({
+            return res.status(200).json({
                 success: true,
                 user, 
+                token,
                 message: "Logged and cookie created successfully ...",
             })
         }else{
