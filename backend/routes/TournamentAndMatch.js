@@ -1,7 +1,7 @@
 import express from "express";
 import multer from 'multer';
 import { createTournament, getTournaments, getTournamentById, updateTournament, deleteTournament, addTeam } from "../controllers/Tournament/Tournament.js";
-import { createMatch, getMatches, getMatchById, updateMatch, deleteMatch } from "../controllers/Tournament/Match/Match.js";
+import { createMatch, getMatches, getMatchById, updateMatch, deleteMatch,updateMatchDetails,initializeMatch } from "../controllers/Tournament/Match/Match.js";
 import { addBall, getBallsByMatch, getBallById, updateBall, deleteBall } from "../controllers/Tournament/Match/Ball.js";
 import { updateInnings, getInningsByMatch, deleteInnings } from "../controllers/Tournament/Match/Inning.js";
 import { getLeaderboard, updateLeaderboard, resetLeaderboard } from "../controllers/Tournament/Leaderboard.js";
@@ -23,6 +23,8 @@ router.delete("/:id", deleteTournament);
 router.post("/createMatch", createMatch);
 router.get("/getMatches", getMatches);
 router.get("getMatchById/:id", getMatchById);
+router.post("/updateMatchDetails", updateMatchDetails);
+router.post("/initialize", initializeMatch);
 router.put("/:id", updateMatch);
 router.delete("/:id", deleteMatch);
 
@@ -30,7 +32,6 @@ router.delete("/:id", deleteMatch);
 router.post("/add", addBall);
 router.get("/match/:matchId", getBallsByMatch);
 router.get("getBallById/:id", getBallById);
-router.put("/update/:id", updateBall);
 router.delete("/delete/:id", deleteBall);
 
 // Inning routes -

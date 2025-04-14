@@ -1,9 +1,9 @@
 import React from 'react';
-import { Player, BowlerStats } from './types';
+import { Player, BowlerStatsModel } from '../pages/types';
 
 interface BowlerStatsProps {
   bowler: Player;
-  bowlerStats: BowlerStats;
+  bowlerStats: BowlerStatsModel;
 }
 
 const BowlerStats: React.FC<BowlerStatsProps> = ({ bowler, bowlerStats }) => (

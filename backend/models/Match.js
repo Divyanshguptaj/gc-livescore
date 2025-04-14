@@ -21,7 +21,7 @@ const MatchSchema = new mongoose.Schema(
     innings: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Inning",
+        ref: "Innings",
       },
     ],
     time: {

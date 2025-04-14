@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose";  
 
 const overSchema = new mongoose.Schema(
   {
@@ -8,8 +8,9 @@ const overSchema = new mongoose.Schema(
       required: true,
     },
     inning: {
-      type: Number, // 1 or 2
-      required: true,
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Innings",
+      // required: true,
     },
     overNumber: {
       type: Number,
@@ -20,7 +21,12 @@ const overSchema = new mongoose.Schema(
       ref: "Player",
       required: true,
     },
-    deliveries: [deliverySchema],
+    deliveries: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ball", 
+      }
+    ],
     totalRuns: {
       type: Number,
       required: true,
@@ -31,13 +37,13 @@ const overSchema = new mongoose.Schema(
       default: 0,
     },
     extras: {
-      type: Number,
-      default: 0,
+      wides: { type: Number, default: 0 },
+      noBalls: { type: Number, default: 0 },
+      byes: { type: Number, default: 0 },
+      legByes: { type: Number, default: 0 },
     },
   },
   { timestamps: true }
 );
 
-const Over = mongoose.model("Over", overSchema);
-
-export default Over;
+export default mongoose.model("Over", overSchema);

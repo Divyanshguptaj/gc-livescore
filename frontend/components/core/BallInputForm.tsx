@@ -1,5 +1,5 @@
 import React from 'react';
-import { BallTypeOption } from './types';
+import { BallTypeOption } from '../pages/types';
 
 const BALL_TYPES: BallTypeOption[] = [
   { value: 'normal', label: 'NORMAL' },
@@ -14,6 +14,7 @@ interface BallInputFormProps {
   isWicket: boolean;
   currentRun: number | null;
   awaitingAction: boolean;
+  isLoading: boolean;
   onBallTypeChange: (type: string) => void;
   onWicketChange: (isWicket: boolean) => void;
   onRunSelect: (run: number) => void;

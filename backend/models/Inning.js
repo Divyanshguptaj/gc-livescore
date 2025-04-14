@@ -29,9 +29,16 @@ const ScorecardSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    overs:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Over",
+      }
+    ],
     extras: {
-      type: Number,
-      default: 0,
+      wides: { type: Number, default: 0 },
+      noBalls: { type: Number, default: 0 },
+      byes: { type: Number, default: 0 },
+      legByes: { type: Number, default: 0 },
     },
     batsmenStats: [
       {
@@ -66,4 +73,4 @@ const ScorecardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Inning", ScorecardSchema);
+export default mongoose.model("Innings", ScorecardSchema);
