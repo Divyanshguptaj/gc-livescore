@@ -4,7 +4,9 @@ import Innings from "../../../models/Inning.js";
 import Over from '../../../models/Over.js';
 import mongoose from "mongoose";
 import Ball from '../../../models/Ball.js'
-import Inning from "../../../models/Inning.js";
+import Team from '../../../models/Team.js'
+import { Request, Response } from 'express';
+// import Inning from "../../../models/Inning.js";
 
 // import PlayerStats from '../../../models/PlayerStats.js';
 export const initializeMatch = async (req, res) => {
@@ -20,13 +22,51 @@ export const initializeMatch = async (req, res) => {
       throw new Error('Match not found');
     }
 
-    // 2. Determine bowling team
+    // 2. Get full team details including players
+    const battingTeam = await Team.findById(battingTeamId).session(session);
+    if (!battingTeam) {
+      throw new Error('Batting team not found');
+    }
+
+    // 3. Determine bowling team
     const bowlingTeamId = match.teams.find(teamId => teamId.toString() !== battingTeamId.toString());
     if (!bowlingTeamId) {
       throw new Error('Could not determine bowling team');
     }
 
-    // 3. Create 5 overs for first inning
+    const bowlingTeam = await Team.findById(bowlingTeamId).session(session);
+    if (!bowlingTeam) {
+      throw new Error('Bowling team not found');
+    }
+
+    // 4. Initialize batsmen stats for all batting team players
+    const battingTeamStats = battingTeam.players.map(playerId => ({
+      player: playerId,
+      runs: 0,
+      ballsFaced: 0,
+      fours: 0,
+      sixes: 0,
+      isOut: false,
+      outType: null,
+      bowler: null,
+      fielder: null,
+      strikeRate: 0
+    }));
+
+    // 5. Initialize bowler stats for all bowling team players
+    const bowlingTeamStats = bowlingTeam.players.map(playerId => ({
+      player: playerId,
+      noOfBatting : playerId==strikerId ? 1 : playerId==nonStrikerId ? 2 : 0,
+      oversBowled: 0,
+      maidens: 0,
+      runsConceded: 0,
+      wickets: 0,
+      economy: 0,
+      wides: 0,
+      noBalls: 0
+    }));
+
+    // 6. Create 5 overs for first inning
     const firstInningOverIds = [];
     for (let i = 1; i <= 5; i++) {
       const over = new Over({
@@ -41,7 +81,7 @@ export const initializeMatch = async (req, res) => {
       firstInningOverIds.push(savedOver._id);
     }
 
-    // 4. Create first inning
+    // 7. Create first inning with all players' stats
     const firstInning = new Innings({
       match: matchId,
       battingTeam: battingTeamId,
@@ -49,12 +89,16 @@ export const initializeMatch = async (req, res) => {
       overs: firstInningOverIds,
       totalRuns: 0,
       totalWickets: 0,
+      batsmenStats: battingTeamStats,
+      bowlersStats: bowlingTeamStats,
       extras: {
         wides: 0,
         noBalls: 0,
         byes: 0,
         legByes: 0
-      }
+      },
+      currentBatsmen: [strikerId, nonStrikerId],
+      currentBowlers: [bowlerId]
     });
     const savedFirstInning = await firstInning.save({ session });
 
@@ -65,7 +109,32 @@ export const initializeMatch = async (req, res) => {
       { session }
     );
 
-    // 5. Create 5 overs for second inning
+    // 8. Initialize stats for second inning (roles reversed)
+    const secondInningBattingStats = bowlingTeam.players.map(playerId => ({
+      player: playerId,
+      runs: 0,
+      ballsFaced: 0,
+      fours: 0,
+      sixes: 0,
+      isOut: false,
+      outType: null,
+      bowler: null,
+      fielder: null,
+      strikeRate: 0
+    }));
+
+    const secondInningBowlingStats = battingTeam.players.map(playerId => ({
+      player: playerId,
+      oversBowled: 0,
+      maidens: 0,
+      runsConceded: 0,
+      wickets: 0,
+      economy: 0,
+      wides: 0,
+      noBalls: 0
+    }));
+
+    // 9. Create 5 overs for second inning
     const secondInningOverIds = [];
     for (let i = 1; i <= 5; i++) {
       const over = new Over({
@@ -80,7 +149,7 @@ export const initializeMatch = async (req, res) => {
       secondInningOverIds.push(savedOver._id);
     }
 
-    // 6. Create second inning
+    // 10. Create second inning with all players' stats
     const secondInning = new Innings({
       match: matchId,
       battingTeam: bowlingTeamId,
@@ -88,12 +157,16 @@ export const initializeMatch = async (req, res) => {
       overs: secondInningOverIds,
       totalRuns: 0,
       totalWickets: 0,
+      batsmenStats: secondInningBattingStats,
+      bowlerStats: secondInningBowlingStats,
       extras: {
         wides: 0,
         noBalls: 0,
         byes: 0,
         legByes: 0
-      }
+      },
+      currentBatsmen: [], // Will be set when second inning starts
+      currentBowlers: []  // Will be set when second inning starts
     });
     const savedSecondInning = await secondInning.save({ session });
 
@@ -104,12 +177,12 @@ export const initializeMatch = async (req, res) => {
       { session }
     );
 
-    // 7. Update match with innings
+    // 11. Update match with innings
     match.innings = [savedFirstInning._id, savedSecondInning._id];
     match.status = 'in_progress';
     await match.save({ session });
 
-    // 8. Commit transaction
+    // 12. Commit transaction
     await session.commitTransaction();
 
     res.status(200).json({
@@ -226,25 +299,85 @@ export const getMatches = async (req, res) => {
 };
 
 // 🔍 Get a Specific Match by ID
-export const getMatchById = async (req, res) => {
+export const getMatchByTournamentId = async (req, res) => {
   try {
-    const match = await Match.findById(req.params.id).populate(
-      "tournament teams scorecard"
-    );
+    const matches = await Match.find({ tournament: req.params.id }).populate([
+      { path: "tournament" },
+      { path: "teams" },
+      { path: "innings" } // now correctly populating innings instead of scorecard
+    ]);
 
-    if (!match) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Match not found" });
+    if (!matches || matches.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No matches found for this tournament",
+      });
     }
 
-    res.status(200).json({ success: true, match });
+    res.status(200).json({ success: true, matches });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
   }
 };
+
+export const getMatchesById = async (req, res) => {
+  try {
+    const matchId = req.params.id;
+
+    const match = await Match.findById(matchId)
+      .populate({
+        path: 'tournament',
+        model: 'Tournament',
+      })
+      .populate({
+        path: 'teams',
+        model: 'Team',
+      })
+      .populate({
+        path: 'innings',
+        model: 'Innings',
+        populate: [
+          {
+            path: 'battingTeam bowlingTeam',
+            model: 'Team',
+          },
+          {
+            path: 'overs',
+            model: 'Over',
+            populate: {
+              path: 'deliveries',
+              model: 'Ball',
+              populate: [
+                { path: 'bowler', model: 'User' },
+                { path: 'batsman', model: 'User' },
+              ],
+            },
+          },
+          // {
+          //   path: 'battingOrder',
+          //   model: 'Player',
+          // },
+          {
+            path: 'fallOfWickets',
+            // model: 'Player',
+          },
+        ],
+      });
+      console.log(match);
+    if (!match) {
+      return res.status(404).json({ error: 'Match not found' });
+    }
+
+    res.status(200).json({ match });
+  } catch (err) {
+    console.error('Error fetching match:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 // ✏️ Update Match Details
 export const updateMatch = async (req, res) => {
@@ -312,6 +445,7 @@ export const updateMatchDetails = async (req, res) => {
       bowlerId,
       runs,
       ballType,
+      legalDeliveries,
       isWicket,
       overNumber,
       ballNumber
@@ -329,7 +463,7 @@ export const updateMatchDetails = async (req, res) => {
     if (!currentInning) throw new Error('No active inning found for batting team');
 
     // 2. Find the correct over using overNumber
-    console.log(overNumber)
+    console.log(overNumber, ballNumber) 
     const over = currentInning.overs.find(o => o.overNumber === (overNumber+1));
     console.log(over)
     if (!over) throw new Error(`Over ${overNumber} not found`);
@@ -341,7 +475,7 @@ export const updateMatchDetails = async (req, res) => {
       tournament: match.tournament,
       match: matchId,
       overNumber,
-      ballNumber,
+      ballNumber : legalDeliveries,
       bowler: bowlerId,
       batsman: strikerId,
       runs,
@@ -398,9 +532,9 @@ export const updateMatchDetails = async (req, res) => {
       case 'leg bye': currentInning.extras.legByes += runs; break;
     }
 
-    if (!['wide', 'no ball'].includes(ballType)) {
-      currentInning.oversPlayed = overNumber;
-    }
+    // if (!['wide', 'no ball'].includes(ballType)) {
+    currentInning.oversPlayed = overNumber;
+    // }
 
     // 6. Update batsman stats
     let batsmanStat = currentInning.batsmenStats.find(stat =>
@@ -424,10 +558,10 @@ export const updateMatchDetails = async (req, res) => {
       batsmanStat.ballsFaced += 1;
       if (runs === 4) batsmanStat.fours += 1;
       if (runs === 6) batsmanStat.sixes += 1;
-      batsmanStat.strikeRate = (batsmanStat.runs / batsmanStat.ballsFaced) * 100;
     } else if (ballType === 'bye' || ballType === 'leg bye') {
       batsmanStat.ballsFaced += 1;
     }
+    batsmanStat.strikeRate = (batsmanStat.runs / batsmanStat.ballsFaced) * 100;
 
     if (isWicket) batsmanStat.status = "Out";
 
@@ -450,10 +584,12 @@ export const updateMatchDetails = async (req, res) => {
     bowlerStat.runsConceded += runs;
     if (ballType === 'wide' || ballType === 'no ball') bowlerStat.runsConceded += 1;
     if (isWicket) bowlerStat.wickets += 1;
-
-    const legalDeliveries = populatedOver.deliveries.length;
-    const fullOvers = Math.floor(legalDeliveries / 6);
-    const remainingBalls = legalDeliveries % 6;
+    // const legalBallsInOver = newThisOver.filter(b => !b.includes('WD') && !b.includes('NB')).length;
+    console.log("legalDel", legalDeliveries)
+    // const fullOvers = Math.floor(legalDeliveries / 6);
+    const fullOvers = overNumber;
+    let remainingBalls = legalDeliveries%6;
+    // legalDeliveries==6 ? fullOvers += 1 : remainingBalls = legalDeliveries%6;
     bowlerStat.overs = fullOvers + (remainingBalls / 10);
     bowlerStat.economy = bowlerStat.runsConceded / (bowlerStat.overs || 1);
 
@@ -463,7 +599,7 @@ export const updateMatchDetails = async (req, res) => {
         wicketNumber: currentInning.totalWickets,
         playerOut: strikerId,
         runsAtFall: currentInning.totalRuns,
-        oversAtFall: overNumber + (ballNumber / 10)
+        oversAtFall: fullOvers + (remainingBalls / 10)
       });
     }
 
@@ -480,7 +616,7 @@ export const updateMatchDetails = async (req, res) => {
         match.status = 'completed';
         match.result = determineMatchResult(match);
       }
-    }
+    } 
 
     await currentInning.save({ session });
     await match.save({ session });

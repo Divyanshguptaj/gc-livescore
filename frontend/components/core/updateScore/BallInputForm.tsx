@@ -1,5 +1,5 @@
 import React from 'react';
-import { BallTypeOption } from '../pages/types';
+import { BallTypeOption } from '../../../types';
 
 const BALL_TYPES: BallTypeOption[] = [
   { value: 'normal', label: 'NORMAL' },

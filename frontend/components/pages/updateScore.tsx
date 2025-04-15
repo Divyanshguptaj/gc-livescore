@@ -1,13 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import { Match, Team, Player, PlayerStats, BowlerStatsModel } from './types';
-import MatchHeader from '../core/MatchHeader';
-import Scoreboard from '../core/Scoreboard';
-import BatsmenStats from '../core/BatsmenStats';
-import BowlerStats from '../core/BowlerStats';
-import OverTracker from '../core/OverTracker';
-import BallInputForm from '../core/BallInputForm';
-import PlayerSelectionModal from '../core/PlayerSelectionModal';
+import { Match, Team, Player, PlayerStats, BowlerStatsModel } from '../../types';
+import MatchHeader from '../core/updateScore/MatchHeader';
+import Scoreboard from '../core/updateScore/Scoreboard';
+import BatsmenStats from '../core/updateScore/BatsmenStats';
+import BowlerStats from '../core/updateScore/BowlerStats';
+import OverTracker from '../core/updateScore/OverTracker';
+import BallInputForm from '../core/updateScore/BallInputForm';
+import PlayerSelectionModal from '../core/updateScore/PlayerSelectionModal';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
@@ -21,6 +21,7 @@ interface LiveUpdatePageProps {
 interface BallUpdatePayload {
   overNumber: number;
   ballNumber: number;
+  legalDeliveries: number;
   matchId: string;
   battingTeamId: string;
   strikerId: string;
@@ -44,6 +45,7 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
     runs: 0,
     wickets: 0,
     balls: 0,
+    legalDeliveries: 0,
     overs: 0, // Add this line to track completed overs
     thisOver: [] as string[],
     striker: initialStriker,
@@ -124,6 +126,7 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
       matchId: match._id,
       overNumber: gameState.overs,
       ballNumber: gameState.thisOver.length + 1,
+      legalDeliveries: gameState.balls,
       battingTeamId: battingTeam._id,
       strikerId: gameState.striker._id,
       nonStrikerId: gameState.nonStriker._id,
@@ -189,6 +192,7 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
       if (legalBallsInOver >= 6) {
         setGameState(prev => ({
           ...prev,
+          legalDelivery: 0,
           overs: prev.overs + 1, // Increment overs counter
           thisOver: [], // Reset current over
         }));
@@ -222,6 +226,9 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
         // Update backend with new batter
         await updateBackend({
           matchId: match._id,
+          overNumber:gameState.overs,
+          ballNumber: gameState.thisOver.length+1,
+          legalDeliveries: gameState.balls,
           battingTeamId: battingTeam._id,
           strikerId: newBatter._id,
           nonStrikerId: gameState.nonStriker._id,
@@ -231,7 +238,6 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
           isWicket: false,
           newBatterId: modalState.newBatterId,
         });
-
         setGameState(prev => ({
           ...prev,
           striker: newBatter,
@@ -263,6 +269,9 @@ const LiveUpdatePage: React.FC<LiveUpdatePageProps> = ({
           matchId: match._id,
           battingTeamId: battingTeam._id,
           strikerId: gameState.striker._id,
+          overNumber:gameState.overs,
+          ballNumber: gameState.thisOver.length+1,
+          legalDeliveries: gameState.balls,
           nonStrikerId: gameState.nonStriker._id,
           bowlerId: newBowler._id,
           runs: 0,

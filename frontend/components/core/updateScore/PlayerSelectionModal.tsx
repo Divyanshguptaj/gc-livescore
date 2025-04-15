@@ -1,5 +1,5 @@
 import React from 'react';
-import { Player } from '../pages/types';
+import { Player } from '../../../types';
 
 interface PlayerSelectionModalProps {
   isOpen: boolean;

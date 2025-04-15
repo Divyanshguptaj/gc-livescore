@@ -15,7 +15,7 @@ const MatchSchema = new mongoose.Schema(
       },
     ],
     date: {
-      type: Date,
+      type: Date, 
       required: true,
     },
     innings: [

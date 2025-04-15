@@ -1,5 +1,5 @@
 import React from 'react';
-import { Player, PlayerStats } from '../pages/types';
+import { Player, PlayerStats } from '../../../types';
 
 interface BatsmenStatsProps {
   striker: Player;

@@ -48,6 +48,7 @@ const ScorecardSchema = new mongoose.Schema(
         fours: { type: Number, default: 0 },
         sixes: { type: Number, default: 0 },
         strikeRate: { type: Number, default: 0 },
+        noOfBatting: {type: Number, default: 0},
         status: { type: String, enum: ["Not Out", "Out"], default: "Not Out" },
       },
     ],
@@ -69,6 +70,10 @@ const ScorecardSchema = new mongoose.Schema(
         oversAtFall: { type: Number },
       },
     ],
+    isCompleted: {
+      type: String,
+      default: false,
+    }
   },
   { timestamps: true }
 );
