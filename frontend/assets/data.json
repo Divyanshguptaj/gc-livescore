@@ -1,0 +1,79 @@
+{
+  "matches": [
+    {
+      "teams": "India vs Australia",
+      "score": "IND 250/3 (40.2)",
+      "status": "Live - 2nd ODI",
+      "overs": "40.2/50",
+      "progress": 80,
+      "series": "Paytm ODI Series"
+    },
+    {
+      "teams": "England vs Pakistan",
+      "score": "ENG 178/7 (34.1)",
+      "status": "Live - 1st T20I",
+      "overs": "34.1/40",
+      "progress": 85,
+      "series": "T20 World Cup Warm-up"
+    }
+  ],
+  "upcomingMatches": [
+    {
+      "teams": "Sri Lanka vs New Zealand",
+      "time": "Tomorrow - 3:30 PM IST",
+      "venue": "R. Premadasa Stadium",
+      "tournament": "World Test Championship"
+    },
+    {
+      "teams": "South Africa vs West Indies",
+      "time": "Sunday - 7:00 PM IST",
+      "venue": "Newlands, Cape Town",
+      "tournament": "T20I Series"
+    }
+  ],
+  "News": [
+    {
+      "image": "/images/rohit-century.jpg",
+      "title": "Rohit Sharma's Masterclass Century in Final",
+      "description": "Captain's brilliant 120(90) powers India to World Cup glory against Australia",
+      "category": "Match Report",
+      "time": "2h ago"
+    },
+    {
+      "image": "/images/babar-resigns.jpg",
+      "title": "Babar Azam Steps Down as Captain",
+      "description": "Pakistan's star batsman resigns from all formats after disappointing World Cup campaign",
+      "category": "Breaking",
+      "time": "5h ago"
+    },
+    {
+      "image": "/images/t20-worldcup.jpg",
+      "title": "T20 World Cup 2026 Venues Revealed",
+      "description": "USA, West Indies and Sri Lanka to co-host the expanded 20-team tournament",
+      "category": "Announcement",
+      "time": "1d ago"
+    }
+  ],
+  "stats": [
+    {
+      "name": "Live Matches",
+      "value": "12",
+      "icon": "🔥"
+    },
+    {
+      "name": "Upcoming",
+      "value": "47",
+      "icon": "📅"
+    },
+    {
+      "name": "Tournaments",
+      "value": "8",
+      "icon": "🏆"
+    },
+    {
+      "name": "Countries",
+      "value": "15",
+      "icon": "🌎"
+    }
+  ]
+}

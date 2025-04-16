@@ -5,7 +5,7 @@ import Over from '../../../models/Over.js';
 import mongoose from "mongoose";
 import Ball from '../../../models/Ball.js'
 import Team from '../../../models/Team.js'
-import { Request, Response } from 'express';
+// import { Request, Response } from 'express';
 // import Inning from "../../../models/Inning.js";
 
 // import PlayerStats from '../../../models/PlayerStats.js';
@@ -328,14 +328,23 @@ export const getMatchesById = async (req, res) => {
   try {
     const matchId = req.params.id;
 
+    // Fetch match and populate related data
     const match = await Match.findById(matchId)
       .populate({
         path: 'tournament',
         model: 'Tournament',
+        // populate: {
+        //   path: 'teams matches',
+        //   model: 'Team'
+        // }
       })
       .populate({
         path: 'teams',
         model: 'Team',
+        populate: {
+          path: 'players substitutes',
+          model: 'User'
+        }
       })
       .populate({
         path: 'innings',
@@ -343,7 +352,7 @@ export const getMatchesById = async (req, res) => {
         populate: [
           {
             path: 'battingTeam bowlingTeam',
-            model: 'Team',
+            model: 'Team'
           },
           {
             path: 'overs',
@@ -352,30 +361,163 @@ export const getMatchesById = async (req, res) => {
               path: 'deliveries',
               model: 'Ball',
               populate: [
-                { path: 'bowler', model: 'User' },
-                { path: 'batsman', model: 'User' },
-              ],
-            },
-          },
-          // {
-          //   path: 'battingOrder',
-          //   model: 'Player',
-          // },
-          {
-            path: 'fallOfWickets',
-            // model: 'Player',
-          },
-        ],
+                { path: 'batsman bowler', model: 'User' }
+              ]
+            }
+          }
+        ]
       });
-      console.log(match);
-    if (!match) {
-      return res.status(404).json({ error: 'Match not found' });
-    }
 
-    res.status(200).json({ match });
-  } catch (err) {
-    console.error('Error fetching match:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    if (!match) {
+      return res.status(404).json({ success: false, message: 'Match not found' });
+    }
+    // console.log("match", match)
+    // Structure matchInfo
+    const matchInfo = {
+      _id: match._id,
+      date: match.date,
+      venue: match.venue,
+      result: match.result,
+      teams: match.teams.map(t => ({ _id: t._id, name: t.name })),
+      tournament: {
+        _id: match.tournament._id,
+        name: match.tournament.name,
+        format: match.tournament.format
+      }
+    };
+    console.log("matchinfo", matchInfo)
+    // Structure tournamentInfo
+    const tournamentInfo = {
+      name: match.tournament.name,
+      format: match.tournament.format,
+      status: match.tournament.status,
+      teams: match.tournament.teams.map(team => ({
+        _id: team._id,
+        name: team.name
+      })),
+      matches: match.tournament.matches.map(m => ({
+        _id: m._id,
+        date: m.date,
+        venue: m.venue
+      }))
+    };
+    // console.log("tournamentInfo", tournamentInfo)
+    // Structure teamsInfo
+    const teamsInfo = match.teams.map(team => ({
+      _id: team._id,
+      name: team.name,
+      players: team.players.map(p => ({ _id: p._id, name: p.name })),
+      substitutes: team.substitutes.map(s => ({ _id: s._id, name: s.name }))
+    }));
+    // console.log("teamsInfo",teamsInfo)
+    // Structure innings summary
+    const innings = match.innings.map(inning => ({
+      _id: inning._id,
+      battingTeam: {
+        _id: inning.battingTeam._id,
+        name: inning.battingTeam.name
+      },
+      bowlingTeam: {
+        _id: inning.bowlingTeam._id,
+        name: inning.bowlingTeam.name
+      },
+      totalRuns: inning.totalRuns,
+      totalWickets: inning.totalWickets,
+      oversPlayed: inning.totalOvers
+    }));
+    // console.log("match", match);
+    // console.log("innings", innings);
+    // Structure fullScorecard
+    const fullScorecard = match.innings.map(inning => ({
+      _id: inning._id,
+      battingTeam: {
+        _id: inning.battingTeam._id,
+        name: inning.battingTeam.name
+      },
+      bowlingTeam: {
+        _id: inning.bowlingTeam._id,
+        name: inning.bowlingTeam.name
+      },
+      totalRuns: inning.totalRuns,
+      totalWickets: inning.totalWickets,
+      oversPlayed: inning.totalOvers,
+      overs: inning.overs.map(over => ({
+        overNumber: over.overNumber,
+        bowlerId: {
+          _id: over.bowler?._id,
+          name: over.bowler?.name
+        },
+        // totalRuns: over.balls.deliveries((sum, b) => sum + b.runs, 0),
+        // totalWickets: over.deliveries.filter(b => b.isWicket).length,
+        balls: over.deliveries.map((ball, i) => ({
+          ballNumber: i + 1,
+          batsman: {
+            _id: ball.batsman?._id,
+            name: ball.batsman?.name
+          },
+          runs: ball.runs,
+          isWicket: ball.isWicket,
+          wicketType: ball.wicketType || null
+        }))
+      })),
+      batsmenStats: inning.batsmenStats?.map(player => ({
+        player: {
+          _id: player._id,
+          name: player.name
+        },
+        runs: player.runs || 0,
+        ballsFaced: player.ballsFaced || 0,
+        status: player.status || "Not Available"
+      })) || [],
+      bowlersStats: inning.bowlersStats?.map(player => ({
+        player: {
+          _id: player._id,
+          name: player.name
+        },
+        overs: player.overs || 0,
+        wickets: player.wickets || 0,
+        runsConceded: player.runsConceded || 0
+      })) || []
+    }));
+    // console.log("fullScorecard", fullScorecard)
+    // Structure ballByBall
+    const ballByBall = match.innings.flatMap(inning =>
+      inning.overs.flatMap(over =>
+        over.deliveries.map((ball, i) => ({
+          overNumber: over.overNumber,
+          ballNumber: i + 1,
+          batsman: {
+            _id: ball.batsman?._id,
+            name: ball.batsman?.name
+          },
+          bowler: {
+            _id: ball.bowler?._id,
+            name: ball.bowler?.name
+          },
+          runs: ball.runs,
+          isWicket: ball.isWicket,
+          wicketType: ball.wicketType || null
+        }))
+      )
+    );
+    // console.log("ballByBall", ballByBall)
+    console.log("response")
+    // Send response
+    // return res.json(200);
+    return res.status(200).json({
+      success: true,
+      data: {
+        matchInfo,
+        tournamentInfo,
+        teamsInfo,
+        innings,
+        fullScorecard,
+        ballByBall
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching full match details:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
 

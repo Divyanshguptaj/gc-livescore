@@ -1,76 +1,459 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import axios from 'axios';
-import { Match } from '@/types';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { FiArrowLeft } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { FiCalendar, FiMapPin, FiUsers, FiAward, FiRefreshCw } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';interface Player {
+  _id: string;
+  name: string;
+}
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+interface Team {
+  _id: string;
+  name: string;
+  players: Player[];
+}
+
+interface Ball {
+  ballNumber: number;
+  batsman: Player;
+  runs: number;
+  isWicket: boolean;
+  wicketType: string | null;
+}
+
+interface Over {
+  overNumber: number;
+  bowlerId: Player;
+  balls: Ball[];
+}
+
+interface Innings {
+  _id: string;
+  battingTeam: Team;
+  bowlingTeam: Team;
+  totalRuns: number;
+  totalWickets: number;
+  oversPlayed: number;
+  overs: Over[];
+  batsmenStats: {
+    player: Player;
+    runs: number;
+    ballsFaced: number;
+    status: string;
+  }[];
+  bowlersStats: {
+    player: Player;
+    overs: number;
+    wickets: number;
+    runsConceded: number;
+  }[];
+}
+
+interface MatchDetails {
+  matchInfo: {
+    _id: string;
+    date: string;
+    venue: string;
+    result: string;
+    teams: Team[];
+    tournament: {
+      _id: string;
+      name: string;
+      format: string;
+    };
+  };
+  tournamentInfo: {
+    name: string;
+    format: string;
+    status: string;
+  };
+  teamsInfo: Team[];
+  innings: Innings[];
+  fullScorecard: Innings[];
+  ballByBall: any[];
+}
 
 export default function MatchDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
-  const [match, setMatch] = useState<Match | null>(null);
+  const [matchData, setMatchData] = useState<MatchDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [activeInning, setActiveInning] = useState(0);
 
   useEffect(() => {
-    const fetchMatch = async () => {
+    const fetchMatchDetails = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/tournament/getMatchesById/${id}`);
-        console.log(res.data);
-        setMatch(res.data.match);
-      } catch (err) {
-        console.error('Error fetching match:', err);
-        setError('Failed to load match details');
+        const response = await axios.get(`${BASE_URL}/tournament/getMatchesById/${id}`);
+
+        // const response = await axios.get(`${BASE_URL}/tournament/getMatchesById/${id}`);
+        setMatchData(response.data.data);
+      } catch (error) {
+        toast.error('Failed to load match details');
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchMatch();
+    fetchMatchDetails();
   }, [id]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage error={error} onRetry={() => window.location.reload()} />;
-  if (!match) return <ErrorMessage error="Match not found" onRetry={() => router.push('/tournaments')} />;
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/matches/${id}`);
+      setMatchData(response.data.data);
+      toast.success('Match data refreshed!');
+    } catch (error) {
+      toast.error('Failed to refresh data');
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!matchData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Failed to load match details</p>
+      </div>
+    );
+  }
+
+  const currentInning = matchData.fullScorecard[activeInning];
+  const currentBattingTeam = currentInning?.battingTeam;
+  const currentBowlingTeam = currentInning?.bowlingTeam;
+
+  // Get current batsmen (assuming last two players in batsmenStats are current)
+  const currentBatsmen = currentInning?.batsmenStats?.slice(-2) || [];
+  const striker = currentBatsmen[0];
+  const nonStriker = currentBatsmen[1];
+
+  // Get current bowler (assuming last bowler in bowlersStats is current)
+  const currentBowler = currentInning?.bowlersStats?.slice(-1)[0];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6 space-y-6">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-blue-600 hover:underline"
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Match Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8"
         >
-          <FiArrowLeft /> Back
-        </button>
-
-        <h1 className="text-3xl font-bold text-gray-900">
-          {match.teams[0]?.name} vs {match.teams[1]?.name}
-        </h1>
-
-        <div className="text-gray-600 space-y-1">
-          <p><strong>Date:</strong> {new Date(match.date).toLocaleString()}</p>
-          <p><strong>Venue:</strong> {match.venue}</p>
-          <p><strong>Status:</strong> {match.status}</p>
-          <p><strong>Format:</strong> {match.format}</p>
-        </div>
-
-        {match.result && (
-          <div className="bg-green-50 border border-green-200 p-4 rounded-md text-green-800">
-            <strong>Result:</strong> {match.result}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {matchData.matchInfo.teams[0]?.name} vs {matchData.matchInfo.teams[1]?.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                <FiCalendar className="mr-2 text-blue-500" />
+                <span className="text-sm">
+                  {new Date(matchData.matchInfo.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                <FiMapPin className="mr-2 text-red-500" />
+                <span className="text-sm">{matchData.matchInfo.venue}</span>
+              </div>
+              <div className="flex items-center text-gray-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                <FiAward className="mr-2 text-purple-500" />
+                <span className="text-sm">{matchData.tournamentInfo.name}</span>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Additional Details</h2>
-          <pre className="bg-gray-100 p-4 rounded-md text-sm text-gray-700 overflow-x-auto">
-            {JSON.stringify(match, null, 2)}
-          </pre>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleRefresh}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <FiRefreshCw className="h-5 w-5" />
+            Refresh
+          </motion.button>
+        </motion.div>
+
+        {/* Score Summary */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              {currentBattingTeam?.name} - {currentInning?.totalRuns}/{currentInning?.totalWickets}
+            </h2>
+            <span className="text-gray-600">
+              Overs: {Math.floor(currentInning?.oversPlayed || 0)}.{(currentInning?.oversPlayed % 1 * 10).toFixed(0)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Batting Team */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Batting</h3>
+              <div className="space-y-4">
+                {currentBatsmen.map((batsman, index) => (
+                  <div key={batsman.player._id} className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {batsman.player.name} {index === 0 && '✱'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {batsman.runs} ({batsman.ballsFaced})
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      batsman.status === 'Out' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {batsman.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bowling Team */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Bowling</h3>
+              {currentBowler && (
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-gray-900">{currentBowler.player.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {currentBowler.overs}-{currentBowler.runsConceded}-{currentBowler.wickets}
+                    </p>
+                  </div>
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                    {currentBowler.overs} overs
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Match Status */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Match Status</h3>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  matchData.tournamentInfo.status === 'Upcoming'
+                    ? 'bg-amber-100 text-amber-800'
+                    : matchData.tournamentInfo.status === 'Ongoing'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-purple-100 text-purple-800'
+                }`}>
+                  {matchData.tournamentInfo.status}
+                </span>
+                <p className="text-sm text-gray-600">
+                  {matchData.matchInfo.result || 'In progress'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Innings Selector */}
+        <div className="flex gap-2 mb-6">
+          {matchData.fullScorecard.map((inning, index) => (
+            <button
+              key={inning._id}
+              onClick={() => setActiveInning(index)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeInning === index
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Inning {index + 1}
+            </button>
+          ))}
         </div>
+
+        {/* Detailed Scorecard */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Batting Stats */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Batting Card</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Batsman
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Runs
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Balls
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        SR
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {currentInning.batsmenStats?.map((batsman) => (
+                      <tr key={batsman.player._id}>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-sm font-medium text-gray-900">
+                              {batsman.player.name}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {batsman.runs}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {batsman.ballsFaced}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {batsman.ballsFaced > 0
+                            ? ((batsman.runs / batsman.ballsFaced) * 100).toFixed(2)
+                            : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              batsman.status === 'Out'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {batsman.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bowling Stats */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-xl shadow-lg overflow-hidden"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Bowling Card</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bowler
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        O
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        R
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        W
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Econ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {currentInning.bowlersStats?.map((bowler) => (
+                      <tr key={bowler.player._id}>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-sm font-medium text-gray-900">
+                              {bowler.player.name}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {bowler.overs}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {bowler.runsConceded}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {bowler.wickets}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {bowler.overs > 0
+                            ? (bowler.runsConceded / bowler.overs).toFixed(2)
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Recent Balls */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8 bg-white rounded-xl shadow-lg overflow-hidden"
+        >
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Balls</h3>
+            <div className="flex flex-wrap gap-2">
+              {currentInning.overs?.slice(-3).flatMap(over =>
+                over.balls?.slice(-6).map((ball, i) => (
+                  <div
+                    key={`${over.overNumber}.${i}`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                      ball.isWicket
+                        ? 'bg-red-100 text-red-800'
+                        : ball.runs === 0
+                          ? 'bg-gray-100 text-gray-800'
+                          : ball.runs === 4
+                            ? 'bg-blue-100 text-blue-800'
+                            : ball.runs === 6
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-green-100 text-green-800'
+                    }`}
+                  >
+                    {ball.isWicket ? 'W' : ball.runs}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
