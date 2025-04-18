@@ -35,7 +35,7 @@ const LandingPage = () => {
         {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-[#1e40af]/10"
+            className="absolute rounded-full bg-[#0000ff]/10"
             initial={{
               x: Math.random() * 100,
               y: Math.random() * 100,
@@ -61,7 +61,7 @@ const LandingPage = () => {
         {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-white/10"
+            className="absolute rounded-full bg-white"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -84,7 +84,7 @@ const LandingPage = () => {
       <div className="fixed inset-0 bg-gradient-to-b from-[#1e3a8a]/30 via-[#0a0a0a] to-[#1e3a8a]/30 pointer-events-none" />
 
       {/* Header */}
-      <motion.header 
+      {/* <motion.header 
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-[#1e3a8a]/30"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -137,7 +137,7 @@ const LandingPage = () => {
             Get App
           </motion.button>
         </div>
-      </motion.header>
+      </motion.header> */}
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -146,7 +146,7 @@ const LandingPage = () => {
           style={{ opacity, scale, y }}
         >
           <div 
-            className="w-full h-full bg-[url('/cricket-stadium-night.webp')] bg-cover bg-center"
+            className="w-full h-full bg-[url('/images/cricket-stadium-night.webp')] bg-cover bg-center"
             data-parallax="0.2"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-[#0a0a0a]" />
@@ -212,7 +212,7 @@ const LandingPage = () => {
           
           {/* Animated Cricket Ball */}
           <motion.img
-            src="/ball.png"
+            src="/images/ball.png"
             alt="Cricket Ball"
             className="absolute top-1/2 left-1/4 w-16 h-16 z-0"
             animate={{
@@ -231,20 +231,6 @@ const LandingPage = () => {
           <motion.div 
             className="absolute bottom-20 left-10 z-10"
             animate={{
-              y: [0, -20, 0],
-              transition: {
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }
-            }}
-          >
-            <img src="/images/Batsman.png" alt="Batsman" className="h-[200] opacity-80" />
-          </motion.div>
-          
-          <motion.div 
-            className="absolute bottom-20 right-10 z-10"
-            animate={{
               y: [0, 20, 0],
               transition: {
                 duration: 5,
@@ -254,6 +240,20 @@ const LandingPage = () => {
             }}
           >
             <img src="/images/Bowler.png" alt="Bowler" className="h-[200] opacity-80" />
+          </motion.div>
+
+          <motion.div 
+            className="absolute bottom-20 right-10 z-10"
+            animate={{
+              y: [0, -20, 0],
+              transition: {
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+          >
+            <img src="/images/Batsman.png" alt="Batsman" className="h-[200] opacity-80" />
           </motion.div>
         </div>
         

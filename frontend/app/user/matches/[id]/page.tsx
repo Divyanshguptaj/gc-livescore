@@ -86,7 +86,7 @@ export default function MatchDetailPage() {
     const fetchMatchDetails = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/tournament/getMatchesById/${id}`);
-
+        console.log("full scorecard", response.data.data.fullScorecard);
         // const response = await axios.get(`${BASE_URL}/tournament/getMatchesById/${id}`);
         setMatchData(response.data.data);
       } catch (error) {
@@ -135,9 +135,16 @@ export default function MatchDetailPage() {
   const currentBowlingTeam = currentInning?.bowlingTeam;
 
   // Get current batsmen (assuming last two players in batsmenStats are current)
+//   const currentBatsmen = matchData.ballByBall
   const currentBatsmen = currentInning?.batsmenStats?.slice(-2) || [];
   const striker = currentBatsmen[0];
   const nonStriker = currentBatsmen[1];
+  const currentOver = currentInning.overs[currentInning.oversPlayed];
+
+    // Count only **valid** deliveries (not wides or no-balls)
+    const currentBallNumber = (currentOver.balls || []).filter(
+    ball => (ball?.extraType !== 'wide' && ball?.extraType !== 'noBall')
+    ).length;
 
   // Get current bowler (assuming last bowler in bowlersStats is current)
   const currentBowler = currentInning?.bowlersStats?.slice(-1)[0];
@@ -201,7 +208,7 @@ export default function MatchDetailPage() {
               {currentBattingTeam?.name} - {currentInning?.totalRuns}/{currentInning?.totalWickets}
             </h2>
             <span className="text-gray-600">
-              Overs: {Math.floor(currentInning?.oversPlayed || 0)}.{(currentInning?.oversPlayed % 1 * 10).toFixed(0)}
+              Overs: {Math.floor(currentInning?.oversPlayed || 0)}.{currentBallNumber}
             </span>
           </div>
 
@@ -211,7 +218,7 @@ export default function MatchDetailPage() {
               <h3 className="text-lg font-semibold text-gray-700 mb-3">Batting</h3>
               <div className="space-y-4">
                 {currentBatsmen.map((batsman, index) => (
-                  <div key={batsman.player._id} className="flex justify-between items-center">
+                    <div key={batsman.player._id} className="flex justify-between items-center">
                     <div>
                       <p className="font-medium text-gray-900">
                         {batsman.player.name} {index === 0 && '✱'}
@@ -431,26 +438,33 @@ export default function MatchDetailPage() {
           <div className="p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Balls</h3>
             <div className="flex flex-wrap gap-2">
-              {currentInning.overs?.slice(-3).flatMap(over =>
-                over.balls?.slice(-6).map((ball, i) => (
-                  <div
-                    key={`${over.overNumber}.${i}`}
+            {(() => {
+                return (currentOver.balls || []).map((ball, i) => (
+                    <div
+                    key={`${currentOver.overNumber}.${i}`}
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                      ball.isWicket
+                        ball.isWicket
                         ? 'bg-red-100 text-red-800'
                         : ball.runs === 0
-                          ? 'bg-gray-100 text-gray-800'
-                          : ball.runs === 4
+                            ? 'bg-gray-100 text-gray-800'
+                            : ball.runs === 4
                             ? 'bg-blue-100 text-blue-800'
                             : ball.runs === 6
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-green-100 text-green-800'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-green-100 text-green-800'
                     }`}
-                  >
-                    {ball.isWicket ? 'W' : ball.runs}
-                  </div>
-                ))
-              )}
+                    >
+                    {ball.isWicket
+                        ? 'W'
+                        : ball.extraType === 'wide'
+                        ? 'WD'
+                        : ball.extraType === 'noBall'
+                            ? 'NB'
+                            : ball.runs}
+                    </div>
+                ));
+                })()}
+
             </div>
           </div>
         </motion.div>
