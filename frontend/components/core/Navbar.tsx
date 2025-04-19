@@ -36,6 +36,7 @@ export const Navbar: React.FunctionComponent = () => {
     { title: "Update Match", href: "/admin/updateMatch" },
     { title: "Add Teams", href: "/admin/addTeams" },
     { title: "Add Players", href: "/admin/addPlayers" },
+    { title: "Add News", href: "/admin/addNews" },
   ];
 
   useEffect(() => {

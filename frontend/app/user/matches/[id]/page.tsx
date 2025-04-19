@@ -5,7 +5,9 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FiCalendar, FiMapPin, FiUsers, FiAward, FiRefreshCw } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';interface Player {
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
+interface Player {
   _id: string;
   name: string;
 }
@@ -136,10 +138,30 @@ export default function MatchDetailPage() {
 
   // Get current batsmen (assuming last two players in batsmenStats are current)
 //   const currentBatsmen = matchData.ballByBall
+
   const currentBatsmen = currentInning?.batsmenStats?.slice(-2) || [];
-  const striker = currentBatsmen[0];
-  const nonStriker = currentBatsmen[1];
   const currentOver = currentInning.overs[currentInning.oversPlayed];
+  const striker = currentOver.balls[currentOver.balls.length-1].batsman;
+  let strikerDetails = { status: '', runs: 0, ballfaced: 0 };
+  let currbowlerStats = { name: '', runs: 0, overs: 0.0, wickets: 0 };
+  const currbowlerId = currentOver.bowlerId._id;
+  //name , overs , runs , wickets
+  const helperCountingbowlerStats = currentInning.bowlersStats.map((bowler)=>{
+    if(currbowlerId===bowler.player._id){
+      currbowlerStats.name = bowler.player.name;
+      currbowlerStats.runs = bowler.runsConceded
+      currbowlerStats.overs = bowler.overs
+      currbowlerStats.wickets = bowler.wickets
+    } 
+  })
+
+  const stikerRuns = currentInning.batsmenStats.map((batsman)=>{
+    if(batsman.player._id==striker._id){
+      strikerDetails.status = batsman.status;
+      strikerDetails.runs = batsman.runs;
+      strikerDetails.ballfaced = batsman.ballsFaced;
+    } 
+  })
 
     // Count only **valid** deliveries (not wides or no-balls)
     const currentBallNumber = (currentOver.balls || []).filter(
@@ -217,23 +239,19 @@ export default function MatchDetailPage() {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-700 mb-3">Batting</h3>
               <div className="space-y-4">
-                {currentBatsmen.map((batsman, index) => (
-                    <div key={batsman.player._id} className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {batsman.player.name} {index === 0 && '✱'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {batsman.runs} ({batsman.ballsFaced})
-                      </p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      batsman.status === 'Out' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {batsman.status}
-                    </span>
-                  </div>
-                ))}
+                <div className="flex justify-between items-center">
+                  <p className="font-medium text-gray-900">
+                    {striker.name} {'✱'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {strikerDetails.runs} ({strikerDetails.ballfaced})
+                  </p>
+                </div>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  strikerDetails.status === 'Out' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {strikerDetails.status}
+                </span>
               </div>
             </div>
 
@@ -243,13 +261,13 @@ export default function MatchDetailPage() {
               {currentBowler && (
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium text-gray-900">{currentBowler.player.name}</p>
+                    <p className="font-medium text-gray-900">{currbowlerStats.name}</p>
                     <p className="text-sm text-gray-500">
-                      {currentBowler.overs}-{currentBowler.runsConceded}-{currentBowler.wickets}
+                      {currbowlerStats.runs}-{currbowlerStats.wickets}
                     </p>
                   </div>
                   <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                    {currentBowler.overs} overs
+                    {currbowlerStats.overs} overs
                   </span>
                 </div>
               )}

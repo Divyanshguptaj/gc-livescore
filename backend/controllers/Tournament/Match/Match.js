@@ -278,7 +278,8 @@ export const createMatch = async (req, res) => {
 // 📋 Get All Matches
 export const getMatches = async (req, res) => {
   try {
-    // console.log("object")
+    console.log("object")
+
     const matches = await Match.find()
       .populate("tournament")
       .populate("innings")
@@ -289,7 +290,7 @@ export const getMatches = async (req, res) => {
           { path: "substitutes" },
         ],
       });
-
+      console.log("match", matches)
     res.status(200).json({ success: true, matches });
   } catch (error) {
     res

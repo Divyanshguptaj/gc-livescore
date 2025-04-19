@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/create",auth, isAdmin, createTournament);
 router.post("/addTeam",upload.none(), addTeam);
 router.get("/getTournaments", getTournaments);
-router.get("/:id", getTournamentById);
+router.get("/getTournamentById/:id", getTournamentById);
 router.put("/:id", updateTournament);
 router.delete("/:id", deleteTournament);
 

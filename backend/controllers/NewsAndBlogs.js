@@ -3,9 +3,11 @@ import NewsAndBlog from "../models/NewsAndBlogs.js";
 // ✅ Create a news/blog
 export const createNewsOrBlog = async (req, res) => {
   try {
-    const { title, content, author, category, tournament } = req.body;
-
-    if (!title || !content || !author) {
+    console.log("afjlasfjs");
+    const { title, content, category, tournament } = req.body;
+    const image = req.file;
+    console.log(title)
+    if (!title || !content) {
       return res.status(400).json({ success: false, message: "Title, content, and author are required." });
     }
 

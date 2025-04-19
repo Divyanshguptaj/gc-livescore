@@ -72,6 +72,7 @@ const SetupMatchPage = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
+        console.log("object")
         const res = await axios.get<{ matches: Match[] }>(`${BASE_URL}/tournament/getMatches`);
         console.log("response",res?.data);
         const options = res?.data?.matches.map((match: Match) => ({
@@ -201,12 +202,12 @@ const SetupMatchPage = () => {
             </>
           ) : (
             <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4">Match Setup Complete</h2>
+              <h2 className="text-xl font-semibold mb-4 text-black">Match Setup Complete</h2>
               <div className="mb-6">
-                <p><strong>Batting Team:</strong> {battingTeam.name}</p>
-                <p><strong>Striker:</strong> {striker.label}</p>
-                <p><strong>Non-Striker:</strong> {nonStriker.label}</p>
-                <p><strong>Bowler:</strong> {bowler.label}</p>
+                <p className='text-gray-500'><strong className='text-gray-800'>Batting Team:</strong> {battingTeam.name}</p>
+                <p className='text-gray-500'><strong className='text-gray-800'>Striker:</strong> {striker.label}</p>
+                <p className='text-gray-500'><strong className='text-gray-800'>Non-Striker:</strong> {nonStriker.label}</p>
+                <p className='text-gray-500'><strong className='text-gray-800'>Bowler:</strong> {bowler.label}</p>
               </div>
               <button
                 onClick={initializeMatch}

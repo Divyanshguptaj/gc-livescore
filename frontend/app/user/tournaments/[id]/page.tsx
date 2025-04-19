@@ -24,7 +24,7 @@ export default function TournamentDetailPage({ params }: { params: { id: string 
     const fetchData = async () => {
       try {
         const [tournamentRes, matchesRes] = await Promise.all([
-          axios.get(`${BASE_URL}/tournament/${id}`),
+          axios.get(`${BASE_URL}/tournament/getTournamentById/${id}`),
           axios.get(`${BASE_URL}/tournament/${id}/getMatchByTournamentId`)
         ]);
         setTournament(tournamentRes.data.tournament);
@@ -158,12 +158,12 @@ export default function TournamentDetailPage({ params }: { params: { id: string 
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">Match Schedule</h2>
-                  <button 
+                  {/* <button 
                     onClick={() => router.push(`/tournaments/${id}/new-match`)}
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-md"
                   >
                     <FiPlus /> Add Match
-                  </button>
+                  </button> */}
                 </div>
 
                 <AnimatePresence>
@@ -276,7 +276,7 @@ export default function TournamentDetailPage({ params }: { params: { id: string 
               transition={{ duration: 0.5, delay: 0.4 }}
               className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100"
             >
-              <div className="p-6">
+              {/* <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Tournament Actions</h3>
                 <div className="space-y-3">
                   <motion.button
@@ -299,7 +299,7 @@ export default function TournamentDetailPage({ params }: { params: { id: string 
                     Edit Tournament
                   </motion.button>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
 
             {/* Standings Card */}
