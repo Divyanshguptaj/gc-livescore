@@ -330,48 +330,63 @@ export const getMatchesById = async (req, res) => {
 
     // Fetch match and populate related data
     const match = await Match.findById(matchId)
-      .populate({
-        path: 'tournament',
-        model: 'Tournament',
-        // populate: {
-        //   path: 'teams matches',
-        //   model: 'Team'
-        // }
-      })
-      .populate({
-        path: 'teams',
-        model: 'Team',
-        populate: {
-          path: 'players substitutes',
-          model: 'User'
-        }
-      })
-      .populate({
-        path: 'innings',
-        model: 'Innings',
+  .populate({
+    path: 'tournament',
+    model: 'Tournament'
+  })
+  .populate({
+    path: 'teams',
+    model: 'Team',
+    populate: {
+      path: 'players substitutes',
+      model: 'User'
+    }
+  })
+  .populate({
+    path: 'innings',
+    model: 'Innings',
+    populate: [
+      {
+        path: 'battingTeam bowlingTeam',
+        model: 'Team'
+      },
+      {
+        path: 'batsmenStats.player',
+        model: 'User',
+        select: '_id name'
+      },
+      {
+        path: 'bowlersStats.player',
+        model: 'User',
+        select: '_id name'
+      },
+      {
+        path: 'overs',
+        model: 'Over',
         populate: [
           {
-            path: 'battingTeam bowlingTeam',
-            model: 'Team'
+            path: 'deliveries',
+            model: 'Ball',
+            populate: [
+              { path: 'bowler', model: 'User', select: '_id name' },
+              { path: 'batsman', model: 'User', select: '_id name' }
+            ]
           },
           {
-            path: 'overs',
-            model: 'Over',
-            populate: {
-              path: 'deliveries',
-              model: 'Ball',
-              populate: [
-                { path: 'batsman bowler', model: 'User' }
-              ]
-            }
+            path: 'bowlerId',
+            model: 'User',
+            select: '_id name'
           }
         ]
-      });
+      }
+    ]
+  });
+
 
     if (!match) {
       return res.status(404).json({ success: false, message: 'Match not found' });
     }
-    // console.log("match", match)
+    // console.log("match", match.innings[0].overs[0].deliveries)
     // Structure matchInfo
     const matchInfo = {
       _id: match._id,
@@ -385,7 +400,7 @@ export const getMatchesById = async (req, res) => {
         format: match.tournament.format
       }
     };
-    console.log("matchinfo", matchInfo)
+    // console.log("matchinfo", matchInfo)
     // Structure tournamentInfo
     const tournamentInfo = {
       name: match.tournament.name,
@@ -417,6 +432,7 @@ export const getMatchesById = async (req, res) => {
         _id: inning.battingTeam._id,
         name: inning.battingTeam.name
       },
+      overs: inning.overs,
       bowlingTeam: {
         _id: inning.bowlingTeam._id,
         name: inning.bowlingTeam.name
@@ -426,7 +442,7 @@ export const getMatchesById = async (req, res) => {
       oversPlayed: inning.totalOvers
     }));
     // console.log("match", match);
-    // console.log("innings", innings);
+    // console.log("innings", innings[0].overs);
     // Structure fullScorecard
     const fullScorecard = match.innings.map(inning => ({
       _id: inning._id,
@@ -440,46 +456,46 @@ export const getMatchesById = async (req, res) => {
       },
       totalRuns: inning.totalRuns,
       totalWickets: inning.totalWickets,
-      oversPlayed: inning.totalOvers,
-      overs: inning.overs.map(over => ({
+      oversPlayed: inning.oversPlayed, // this is not there 
+      overs: (inning.overs || []).map(over => ({
         overNumber: over.overNumber,
         bowlerId: {
-          _id: over.bowler?._id,
-          name: over.bowler?.name
+          _id: over.bowlerId?._id,
+          name: over.bowlerId?.name
         },
-        // totalRuns: over.balls.deliveries((sum, b) => sum + b.runs, 0),
-        // totalWickets: over.deliveries.filter(b => b.isWicket).length,
-        balls: over.deliveries.map((ball, i) => ({
+        balls: (over.deliveries || []).map((ball, i) => ({
           ballNumber: i + 1,
           batsman: {
             _id: ball.batsman?._id,
             name: ball.batsman?.name
           },
           runs: ball.runs,
+          extraType: ball.extraType,
           isWicket: ball.isWicket,
           wicketType: ball.wicketType || null
         }))
       })),
-      batsmenStats: inning.batsmenStats?.map(player => ({
+      batsmenStats: inning.batsmenStats?.map(stat => ({
         player: {
-          _id: player._id,
-          name: player.name
+          _id: stat.player?._id,
+          name: stat.player?.name
         },
-        runs: player.runs || 0,
-        ballsFaced: player.ballsFaced || 0,
-        status: player.status || "Not Available"
+        runs: stat.runs || 0,
+        ballsFaced: stat.ballsFaced || 0,
+        status: stat.status || "Not Available"
       })) || [],
       bowlersStats: inning.bowlersStats?.map(player => ({
         player: {
-          _id: player._id,
-          name: player.name
+          _id: player.player._id,
+          name: player.player.name
         },
         overs: player.overs || 0,
         wickets: player.wickets || 0,
         runsConceded: player.runsConceded || 0
       })) || []
     }));
-    // console.log("fullScorecard", fullScorecard)
+    console.log("fullScorecard", fullScorecard[0].overs[0].balls);
+
     // Structure ballByBall
     const ballByBall = match.innings.flatMap(inning =>
       inning.overs.flatMap(over =>
@@ -501,7 +517,7 @@ export const getMatchesById = async (req, res) => {
       )
     );
     // console.log("ballByBall", ballByBall)
-    console.log("response")
+    // console.log(ballByBall)
     // Send response
     // return res.json(200);
     return res.status(200).json({
@@ -787,5 +803,5 @@ export const updateMatchDetails = async (req, res) => {
 };
 
 function determineMatchResult(match) {
-  return 'Match completed'; // You can enhance this later.
+  return 'Match completed';
 }
