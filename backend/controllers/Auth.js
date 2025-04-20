@@ -112,59 +112,65 @@ export const signUp = async (req,res) =>{
 }
 
 //login
-export const login = async (req,res)=>{
-    try{
-        const {email, password} = req.body;
-        if(!email || !password){
-            return res.status(400).json({
-                success: false,
-                message: "Feilds can't be empty",
-            })
-        }
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-        const user = await User.findOne({email: email});
-        if(!user){ 
-            return res.status(400).json({
-                success: false,
-                message: "User doesn't exists , SignUp first then login...",
-            })
-        }
-        //jwt token generation -
-        if(await bcrypt.compare(password, user.password)){
-            const payload = {
-                email: user.email,
-                id: user._id,
-                role: user.role,
-            }
-            const token = jwt.sign(payload, process.env.JWT_SECRET,{
-                expiresIn: "1d",
-            });
-            user.token = token;
-            user.password = undefined; 
-
-            const options = {
-                expires: new Date(Date.now() + 3*24*60*60*1000),
-                httpOnly: true,
-            }
-            return res.status(200).json({
-                success: true,
-                user, 
-                token,
-                message: "Logged and cookie created successfully ...",
-            })
-        }else{
-            return res.status(400).json({
-                success: false,
-                message: "Password doesn't match",
-            })
-        }
-    }catch(error){
-        return res.status(500).json({
-            success: false,
-            message: "Login failed , Please try again later...",
-        })
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Fields can't be empty",
+      });
     }
-}
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User doesn't exist. Please sign up first.",
+      });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect password",
+      });
+    }
+
+    // Generate JWT
+    const payload = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "3d",
+    });
+    
+    // Remove password before sending user
+    user.password = undefined;
+
+    return res.status(200).json({
+      success: true,
+      token,
+      user,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed, please try again later",
+    });
+  }
+};
+
 
 export const changePassword = async (req, res) => {
     try {

@@ -1,29 +1,55 @@
-import NewsAndBlog from "../models/NewsAndBlogs.js";
+import NewsAndBlogs from "../models/NewsAndBlogs.js";
 
 // ✅ Create a news/blog
 export const createNewsOrBlog = async (req, res) => {
   try {
-    console.log("afjlasfjs");
-    const { title, content, category, tournament } = req.body;
-    const image = req.file;
-    console.log(title)
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: "Title, content, and author are required." });
+    const { title, content, category, tournament, author } = req.body;
+
+    if (!title || !content || !author) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, content, and author are required.",
+      });
     }
 
-    const newPost = new NewsAndBlog({ title, content, author, category, tournament });
+    let imageUrl = null;
+
+    // If image is uploaded, multer-storage-cloudinary adds cloudinary data to req.file
+    if (req.file) {
+      imageUrl = req.file.path; // or req.file.secure_url (you can log req.file to check what it contains)
+    }
+
+    const newPost = new NewsAndBlogs({
+      title,
+      content,
+      category,
+      tournament,
+      author,
+      image: imageUrl,
+    });
+
     await newPost.save();
 
-    res.status(201).json({ success: true, message: "News/Blog created successfully.", data: newPost });
+    res.status(201).json({
+      success: true,
+      message: "News/Blog created successfully.",
+      data: newPost,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error.", error: error.message });
+    console.error("Error creating news/blog:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error.",
+      error: error.message,
+    });
   }
 };
+
 
 // ✅ Get all news/blogs
 export const getAllNewsAndBlogs = async (req, res) => {
   try {
-    const posts = await NewsAndBlog.find().populate("author", "name").populate("tournament", "name");
+    const posts = await NewsAndBlogs.find().populate("author", "name").populate("tournament", "name");
     res.status(200).json({ success: true, data: posts });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error.", error: error.message });

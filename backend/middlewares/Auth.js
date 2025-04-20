@@ -4,33 +4,48 @@ dotenv.config();
 
 export const auth = async (req, res, next) => {
   try {
-    console.log("auth");
     const authHeader = req.header("Authorization");
-    const token = (authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null);
-
+    console.log("reachedlvl1")
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization header missing or malformed",
+      });
+    }
+    console.log("reachedlvl2")
+    
+    const token = authHeader.split(" ")[1];
+    
     if (!token) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Token missing",
       });
     }
+    
+    console.log("reachedlvl3")
     try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decode;
+      console.log(token);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+      console.log('khatam')
       next();
-    } catch (error) {
-      return res.status(400).json({
+    } catch (err) {
+      return res.status(401).json({
         success: false,
-        message: "Token is Invalid",
+        message: "Invalid or expired token",
       });
     }
-  } catch (error) {
-    return res.status(400).json({
+
+  } catch (err) {
+    console.error("Error in auth middleware:", err);
+    return res.status(500).json({
       success: false,
-      message: "Something went wrong while validating Token",
+      message: "Internal server error during token validation",
     });
   }
 };
+
 
 //isStudent
 export const isUser = async (req, res, next) => {

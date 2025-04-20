@@ -1,13 +1,13 @@
 import express from "express";
 const router = express.Router();
-
+import { uploadProfileImage } from '../middlewares/upload.js';
 import { getProfile, updateProfile } from "../controllers/User/Profile.js";
 import { registerUser, getAllUsers } from "../controllers/User/User.js";
-
+import { auth } from '../middlewares/Auth.js';
 
 router.post("/register", registerUser);
 router.get('/getAllUsers', getAllUsers);
-router.get("getProfile/:userId", getProfile); // Fetch user profile
-router.put("/:userId", updateProfile); // Update user profile
+router.get("/getProfile",auth, getProfile); // Fetch user profile
+router.put('/updateProfile', auth, uploadProfileImage, updateProfile);
 
 export default router;

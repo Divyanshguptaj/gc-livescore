@@ -21,8 +21,7 @@ const NewsAndBlogsSchema = new mongoose.Schema(
       default: "News",
     },
     author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
       required: true, // The user/admin who posted this
     },
     tournament: {
