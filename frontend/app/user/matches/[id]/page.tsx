@@ -139,9 +139,9 @@ export default function MatchDetailPage() {
   // Get current batsmen (assuming last two players in batsmenStats are current)
 //   const currentBatsmen = matchData.ballByBall
 
-  const currentBatsmen = currentInning?.batsmenStats?.slice(-2) || [];
+  // const currentBatsmen = currentInning?.batsmenStats?.slice(-2) || [];
   const currentOver = currentInning.overs[currentInning.oversPlayed];
-  const striker = currentOver.balls[currentOver.balls.length-1].batsman;
+  const striker = currentOver.balls[currentOver.balls.length-1]?.batsman;
   let strikerDetails = { status: '', runs: 0, ballfaced: 0 };
   let currbowlerStats = { name: '', runs: 0, overs: 0.0, wickets: 0 };
   const currbowlerId = currentOver.bowlerId._id;
@@ -156,10 +156,10 @@ export default function MatchDetailPage() {
   })
 
   const stikerRuns = currentInning.batsmenStats.map((batsman)=>{
-    if(batsman.player._id==striker._id){
-      strikerDetails.status = batsman.status;
-      strikerDetails.runs = batsman.runs;
-      strikerDetails.ballfaced = batsman.ballsFaced;
+    if(batsman.player?._id==striker?._id){
+      strikerDetails.status = batsman?.status;
+      strikerDetails.runs = batsman?.runs;
+      strikerDetails.ballfaced = batsman?.ballsFaced;
     } 
   })
 
@@ -241,7 +241,7 @@ export default function MatchDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <p className="font-medium text-gray-900">
-                    {striker.name} {'✱'}
+                    {striker?.name} {'✱'}
                   </p>
                   <p className="text-sm text-gray-500">
                     {strikerDetails.runs} ({strikerDetails.ballfaced})
