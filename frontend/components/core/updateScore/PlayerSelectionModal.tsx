@@ -25,15 +25,15 @@ const PlayerSelectionModal: React.FC<PlayerSelectionModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-        <h3 className="font-bold text-lg mb-4">{title}</h3>
+        <h3 className="font-bold text-lg mb-4 text-black">{title}</h3>
         <select
           value={selectedId}
           onChange={(e) => onSelect(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
+          className="text-gray-700 w-full p-2 border rounded mb-4"
         >
-          <option value="">Select a player</option>
+          <option value="" className='text-gray-700'>Select a player</option>
           {players.map((player) => (
-            <option key={player._id} value={player._id}>
+            <option key={player._id} value={player._id} className='text-gray-700'>
               {player.name}
             </option>
           ))}
@@ -41,7 +41,7 @@ const PlayerSelectionModal: React.FC<PlayerSelectionModalProps> = ({
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 border rounded hover:bg-gray-100"
+            className="px-4 py-2 border border-black text-black rounded hover:bg-gray-100"
           >
             Cancel
           </button>

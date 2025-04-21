@@ -8,12 +8,18 @@ import{
   getNewsOrBlogById,
   updateNewsOrBlog,
   deleteNewsOrBlog,
+  uploadVideo,
+  getVideosByMatch,
+  getVideoById,
 } from "../controllers/NewsAndBlogs.js";
 
 router.post("/createNewsAndBlog", upload.single('image'), createNewsOrBlog);
 router.get("/getAllNewsAndBlogs", getAllNewsAndBlogs);
-router.get("/:id", getNewsOrBlogById);
+router.get("/getNewsOrBlogById/:id", getNewsOrBlogById);
 router.put("/:id", updateNewsOrBlog);
 router.delete("/:id", deleteNewsOrBlog);
+router.post("/uploadVideo", upload.single('video'), uploadVideo);
+router.get('/getVideos', getVideosByMatch);
+router.get('/getVideoById/:id', getVideoById);
 
 export default router;

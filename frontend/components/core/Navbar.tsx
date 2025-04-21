@@ -22,9 +22,9 @@ export const Navbar: React.FunctionComponent = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const navLinks = [
-    { title: "Live", href: "/user/live" },
+    { title: "Home", href: "/" },
     { title: "Tournaments", href: "/user/tournaments" },
-    { title: "Schedule", href: "/user/schedule" },
+    // { title: "Schedule", href: "/user/schedule" },
     { title: "News", href: "/user/news" },
     { title: "Teams", href: "/user/teams" },
     { title: "Videos", href: "/user/videos" },
@@ -38,6 +38,7 @@ export const Navbar: React.FunctionComponent = () => {
     { title: "Add Players", href: "/admin/addPlayers" },
     { title: "Add News", href: "/admin/addNews" },
     { title: "Create Team", href: "/admin/createTeam" },
+    { title: "Upload Video", href: "/admin/uploadVideo" },
   ];
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export const Navbar: React.FunctionComponent = () => {
                 Admin Panel ▾
               </button>
               {showDropdown && (
-                <div className="absolute right-0 mt-2 bg-neutral-800 border border-gray-600 rounded shadow-md z-10 w-48">
+                <div className="absolute right-0 mt-2 bg-neutral-800 border border-gray-600 rounded shadow-md z-50 w-48">
                   {adminLinks.map(({ title, href }) => (
                     <Link
                       key={title}

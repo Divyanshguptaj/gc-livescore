@@ -146,6 +146,7 @@ export default function MatchDetailPage() {
   let currbowlerStats = { name: '', runs: 0, overs: 0.0, wickets: 0 };
   const currbowlerId = currentOver.bowlerId._id;
   //name , overs , runs , wickets
+
   const helperCountingbowlerStats = currentInning.bowlersStats.map((bowler)=>{
     if(currbowlerId===bowler.player._id){
       currbowlerStats.name = bowler.player.name;
@@ -165,7 +166,7 @@ export default function MatchDetailPage() {
 
     // Count only **valid** deliveries (not wides or no-balls)
     const currentBallNumber = (currentOver.balls || []).filter(
-    ball => (ball?.extraType !== 'wide' && ball?.extraType !== 'noBall')
+    ball => (ball?.extraType !== 'wide' && ball?.extraType !== 'no ball')
     ).length;
 
   // Get current bowler (assuming last bowler in bowlersStats is current)
@@ -230,7 +231,7 @@ export default function MatchDetailPage() {
               {currentBattingTeam?.name} - {currentInning?.totalRuns}/{currentInning?.totalWickets}
             </h2>
             <span className="text-gray-600">
-              Overs: {Math.floor(currentInning?.oversPlayed || 0)}.{currentBallNumber}
+              Overs: {currbowlerStats.overs}
             </span>
           </div>
 
@@ -267,7 +268,7 @@ export default function MatchDetailPage() {
                     </p>
                   </div>
                   <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                    {currbowlerStats.overs} overs
+                  {currbowlerStats.overs} overs
                   </span>
                 </div>
               )}
@@ -357,7 +358,7 @@ export default function MatchDetailPage() {
                           {batsman.runs}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {batsman.ballsFaced}
+                        {batsman.ballsFaced < 0 ? 0 : batsman.ballsFaced}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {batsman.ballsFaced > 0

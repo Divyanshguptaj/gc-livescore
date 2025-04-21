@@ -34,12 +34,22 @@ export interface Tournament {
   
 
   export interface TeamRef {
+    players: any;
     _id: string;
     name: string;
   }
   
+  // interface Match {
+  //   _id: string;
+  //   teams: Team[];
+  //   venue: string;
+  //   date: string;
+  //   format: string; // e.g., "T20", "ODI", etc.
+  //   status: string; // e.g., "Not Started", "Live", "Completed"
+  // }
+  
   export interface Match {
-    format: ReactNode;
+    format: string;
     _id: string;
     date: string;
     venue: string;

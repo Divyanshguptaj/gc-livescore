@@ -19,7 +19,7 @@ const overSchema = new mongoose.Schema(
     bowlerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Player",
-      required: true,
+      // required: true,
     },
     deliveries: [
       {

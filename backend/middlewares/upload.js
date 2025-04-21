@@ -1,54 +1,41 @@
 import multer from 'multer';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import cloudinary from '../config/cloudinary.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'cricket-profiles', // Changed folder name to be more specific
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }], // Auto-resize images
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    return {
+      folder: isVideo ? 'cricket-videos' : 'cricket-profiles',
+      resource_type: isVideo ? 'video' : 'image',
+      allowed_formats: isVideo
+        ? ['mp4', 'mov', 'avi', 'webm']
+        : ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: !isVideo
+        ? [{ width: 500, height: 500, crop: 'limit' }]
+        : undefined,
+    };
   },
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedTypes = ['image/', 'video/'];
+  if (allowedTypes.some((type) => file.mimetype.startsWith(type))) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'), false);
+    cb(new Error('Only image and video files are allowed!'), false);
   }
 };
 
-export const upload = multer({ 
+export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+    fileSize: 100 * 1024 * 1024, // 100MB max for videos
+  },
 });
 
-// Specific middleware for profile images
-export const uploadProfileImage = upload.single('profileImage');  
-
-// import multer from 'multer';
-// import fs from 'fs';
-// import path from 'path';
-
-// const uploadDir = path.join('uploads');
-
-// // Create uploads folder if it doesn't exist
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir);
-// }
-
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, uploadDir);
-//   },
-//   filename: function (req, file, cb) {
-//     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-//     cb(null, uniqueName + path.extname(file.originalname));
-//   },
-// });
-
-// export const upload = multer({ storage });
+// Middleware examples:
+export const uploadProfileImage = upload.single('profileImage'); // For profile uploads
+export const uploadMedia = upload.single('media'); // For video/image form fields

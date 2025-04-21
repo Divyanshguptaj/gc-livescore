@@ -1,14 +1,32 @@
-const cloudinary = require("cloudinary").v2;
+import { v2 as cloudinary } from 'cloudinary';
+import streamifier from 'streamifier';
 
-exports.uploadImagetoCloudinary = async (file, folder,height, quality)=>{
-    const options = {folder};
-    if(height){
-        options.height = height;
-    }
-    if(quality){
-        options.quality = quality;
-    }
-    options.resource_type = "auto";
+export const uploadToCloudinary = (file, folder, height, quality) => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      folder,
+      resource_type: 'auto',
+    };
 
-    return await cloudinary.uploader.upload(file.tempFilePath, options);
-}
+    if (height) options.height = height;
+    if (quality) options.quality = quality;
+
+    const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+
+    streamifier.createReadStream(file.buffer).pipe(uploadStream);
+  });
+};
+
+export const generateThumbnail = (publicId) => {
+  return cloudinary.url(publicId, {
+    resource_type: 'video',
+    format: 'jpg',
+    transformation: [
+      { width: 300, height: 200, crop: 'fill' },
+      { quality: 'auto' }
+    ]
+  });
+};

@@ -1,4 +1,30 @@
 import NewsAndBlogs from "../models/NewsAndBlogs.js";
+import Video from '../models/video.js'
+import mongoose from 'mongoose';
+import { uploadToCloudinary, generateThumbnail } from '../utils/imageUploader.js';
+
+
+export const getVideoById = async (req, res) => {
+  try {
+    const { id } = req.params; // Correctly extract ID from URL params
+
+    const videos = await Video.find({ matchId: id })
+      .populate('tournamentId', 'name')
+      .populate('matchId', 'teams date')
+      .populate('uploader', 'name');
+
+    res.json({
+      success: true,
+      data: videos,
+    });
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch videos' 
+    });
+  }
+};
 
 // ✅ Create a news/blog
 export const createNewsOrBlog = async (req, res) => {
@@ -45,6 +71,67 @@ export const createNewsOrBlog = async (req, res) => {
   }
 };
 
+//Upload video
+// import { generateThumbnail } from '../utils/imageUploader.js'; // keep this import
+
+export const uploadVideo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No video file provided' });
+    }
+
+    console.log("File info from multer-storage-cloudinary:", req.file);
+
+    // Use req.file.path and public_id directly from multer-cloudinary result
+    const { path: videoUrl, filename: publicId } = req.file;
+
+    const thumbnailUrl = generateThumbnail(publicId);
+
+    const video = new Video({
+      title: req.body.title,
+      description: req.body.description,
+      tournamentId: new mongoose.Types.ObjectId(req.body.tournamentId),
+      matchId: new mongoose.Types.ObjectId(req.body.matchId),
+      videoUrl,
+      thumbnailUrl,
+      uploader: req.user?._id || null, // fallback if no user
+    });
+
+    await video.save();
+
+    res.status(201).json({
+      success: true,
+      data: video,
+    });
+  } catch (error) {
+    console.error('Error uploading video:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to upload video' 
+    });
+  }
+};
+
+
+export const getVideosByMatch = async (req, res) => {
+  try {
+    const videos = await Video.find()
+      .populate('tournamentId', 'name')
+      .populate('matchId', 'teams date')
+      .populate('uploader', 'name');
+
+    res.json({
+      success: true,
+      data: videos,
+    });
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch videos' 
+    });
+  }
+};
 
 // ✅ Get all news/blogs
 export const getAllNewsAndBlogs = async (req, res) => {

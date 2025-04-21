@@ -32,6 +32,8 @@ interface Match {
   teams: Team[];
   venue: string;
   date: string;
+  format: string; // e.g., "T20", "ODI", etc.
+  status: string; // e.g., "Not Started", "Live", "Completed"
 }
 
 interface MatchOption {
@@ -65,6 +67,7 @@ const SetupMatchPage = () => {
   const [striker, setStriker] = useState<PlayerOption | null>(null);
   const [nonStriker, setNonStriker] = useState<PlayerOption | null>(null);
   const [bowler, setBowler] = useState<PlayerOption | null>(null);
+  const [overs, setOvers] = useState<number>(20); // Default to 20 overs
   const [isInitializing, setIsInitializing] = useState(false);
   const [isMatchStarted, setIsMatchStarted] = useState(false);
   const [initData, setInitData] = useState<InitData | null>(null);
@@ -72,9 +75,7 @@ const SetupMatchPage = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        console.log("object")
         const res = await axios.get<{ matches: Match[] }>(`${BASE_URL}/tournament/getMatches`);
-        console.log("response",res?.data);
         const options = res?.data?.matches.map((match: Match) => ({
           value: match._id,
           label: `${match.teams[0].name} vs ${match.teams[1].name} - ${new Date(match.date).toLocaleDateString()} at ${match.venue}`,
@@ -93,7 +94,7 @@ const SetupMatchPage = () => {
   };
 
   const initializeMatch = async () => {
-    if (!selectedMatch || !battingTeam || !striker || !nonStriker || !bowler) return;
+    if (!selectedMatch || !battingTeam || !striker || !nonStriker || !bowler || !overs) return;
 
     setIsInitializing(true);
     try {
@@ -103,13 +104,12 @@ const SetupMatchPage = () => {
         strikerId: striker.value,
         nonStrikerId: nonStriker.value,
         bowlerId: bowler.value,
+        overs: overs
       };
 
       const response = await axios.post(`${BASE_URL}/tournament/initialize`, payload);
-      console.log(response.data);
       if (!response.data.success) throw new Error('Failed to initialize match');
 
-      // Convert PlayerOption to Player for LiveUpdatePage props
       const bowlingTeam = selectedMatch.matchData.teams.find(t => t._id !== battingTeam._id)!;
 
       setInitData({
@@ -132,6 +132,13 @@ const SetupMatchPage = () => {
     }
   };
 
+  const handleBattingTeamSelect = (team: Team) => {
+    setBattingTeam(team);
+    // Reset player selections when changing batting team
+    setStriker(null);
+    setNonStriker(null);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 mt-10 bg-white shadow-md rounded-lg">
       {isMatchStarted && initData ? (
@@ -143,82 +150,136 @@ const SetupMatchPage = () => {
           bowler={initData.bowler}
         />
       ) : (
-        <>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
+            {selectedMatch ? 'Match Setup' : 'Select a Match to Start'}
+          </h2>
+
           {!selectedMatch ? (
-            <>
-              <h2 className="text-2xl font-bold mb-4 text-blue-600">Select a Match to Start</h2>
+            <div className="space-y-4">
               <Select
                 options={matchOptions}
                 onChange={(val) => setSelectedMatch(val as MatchOption)}
                 placeholder="Choose a match"
                 className='text-gray-700'
               />
-            </>
-          ) : !battingTeam ? (
-            <>
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Who is Batting First?</h2>
-              {selectedMatch.matchData.teams.map((team) => (
-                <button
-                  key={team._id}
-                  className="block w-full bg-blue-600 text-white py-3 mb-3 rounded hover:bg-blue-700"
-                  onClick={() => setBattingTeam(team)}
-                >
-                  {team.name}
-                </button>
-              ))}
-            </>
-          ) : !striker ? (
-            <>
-              <h2 className="text-lg font-semibold mb-2 text-black">Select Striker</h2>
-              <Select
-                options={getPlayerOptions(battingTeam)}
-                value={striker}
-                onChange={(val) => setStriker(val)}
-                placeholder="Choose striker"
-                className='text-gray-700'
-              />
-            </>
-          ) : !nonStriker ? (
-            <>
-              <h2 className="text-lg font-semibold mb-2 text-black">Select Non-Striker</h2>
-              <Select
-                options={getPlayerOptions(battingTeam).filter(p => p.value !== striker.value)}
-                value={nonStriker}
-                onChange={(val) => setNonStriker(val)}
-                placeholder="Choose non-striker"
-                className='text-gray-700'
-              />
-            </>
-          ) : !bowler ? (
-            <>
-              <h2 className="text-lg font-semibold mb-2 text-black">Select Bowler</h2>
-              <Select
-                options={getPlayerOptions(selectedMatch.matchData.teams.find(t => t._id !== battingTeam._id)!)}
-                value={bowler}
-                onChange={(val) => setBowler(val)}
-                placeholder="Choose bowler"
-                className='text-gray-700'
-              />
-            </>
+            </div>
           ) : (
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-4 text-black">Match Setup Complete</h2>
-              <div className="mb-6">
-                <p className='text-gray-500'><strong className='text-gray-800'>Batting Team:</strong> {battingTeam.name}</p>
-                <p className='text-gray-500'><strong className='text-gray-800'>Striker:</strong> {striker.label}</p>
-                <p className='text-gray-500'><strong className='text-gray-800'>Non-Striker:</strong> {nonStriker.label}</p>
-                <p className='text-gray-500'><strong className='text-gray-800'>Bowler:</strong> {bowler.label}</p>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Batting Team Selection */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-gray-700">Batting Team</label>
+                  <div className="flex space-x-2">
+                    {selectedMatch.matchData.teams.map((team) => (
+                      <button
+                        key={team._id}
+                        className={`flex-1 py-2 px-4 rounded ${battingTeam?._id === team._id 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                        onClick={() => handleBattingTeamSelect(team)}
+                      >
+                        {team.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Overs Selection */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-gray-700">Number of Overs</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={overs}
+                    onChange={(e) => setOvers(Number(e.target.value))}
+                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
               </div>
-              <button
-                onClick={initializeMatch}
-                disabled={isInitializing}
-                className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 disabled:bg-gray-400"
-              >
-                {isInitializing ? 'Initializing Match...' : 'Start Match'}
-              </button>
+
+              {battingTeam && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Striker Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700">Striker</label>
+                    <Select
+                      options={getPlayerOptions(battingTeam)}
+                      value={striker}
+                      onChange={(val) => setStriker(val)}
+                      placeholder="Select striker"
+                      className='text-gray-700'
+                    />
+                  </div>
+
+                  {/* Non-Striker Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700">Non-Striker</label>
+                    <Select
+                      options={getPlayerOptions(battingTeam).filter(p => !striker || p.value !== striker.value)}
+                      value={nonStriker}
+                      onChange={(val) => setNonStriker(val)}
+                      placeholder="Select non-striker"
+                      isDisabled={!striker}
+                      className='text-gray-700'
+                    />
+                  </div>
+
+                  {/* Bowler Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700">Bowler</label>
+                    <Select
+                      options={getPlayerOptions(selectedMatch.matchData.teams.find(t => t._id !== battingTeam._id)!)}
+                      value={bowler}
+                      onChange={(val) => setBowler(val)}
+                      placeholder="Select bowler"
+                      className='text-gray-700'
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Summary and Submit Button */}
+              {battingTeam && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="font-bold text-gray-800 mb-2">Match Summary</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-gray-800 font-medium">Match:</div>
+                      <div className="text-gray-600 ">
+                        {selectedMatch.matchData.teams[0].name} vs {selectedMatch.matchData.teams[1].name}
+                      </div>
+                      
+                      <div className="text-gray-800 font-medium">Batting Team:</div>
+                      <div className="text-gray-600">{battingTeam?.name || '-'}</div>
+                      
+                      <div className="text-gray-800 font-medium">Striker:</div>
+                      <div className="text-gray-600">{striker?.label || '-'}</div>
+                      
+                      <div className="text-gray-800 font-medium">Non-Striker:</div>
+                      <div className="text-gray-600">{nonStriker?.label || '-'}</div>
+                      
+                      <div className="text-gray-800 font-medium">Bowler:</div>
+                      <div className="text-gray-600">{bowler?.label || '-'}</div>
+                      
+                      <div className="text-gray-800 font-medium">Overs:</div>
+                      <div className="text-gray-600">{overs}</div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={initializeMatch}
+                    disabled={!striker || !nonStriker || !bowler || isInitializing}
+                    className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                  >
+                    {isInitializing ? 'Initializing Match...' : 'Start Match'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
